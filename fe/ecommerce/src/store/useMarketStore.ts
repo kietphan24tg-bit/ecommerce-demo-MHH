@@ -4,11 +4,12 @@ import {
   COUNTRY_CACHE_TTL_MS,
   COUNTRY_STORAGE_KEY,
   DEFAULT_COUNTRY_OPTIONS,
+  INITIAL_CART_ITEMS,
   INITIAL_PRODUCTS,
   normalizeCountryName,
   type CountryOption,
 } from '../data/market'
-import type { Product } from '../types/product'
+import type { CartItem, Product } from '../types/product'
 
 type CountryApiResponseItem = {
   name?: {
@@ -28,12 +29,16 @@ type StoredCountryOptions = {
 
 type MarketStore = {
   products: Product[]
+  cartItems: CartItem[]
   countryOptions: CountryOption[]
   hasInitializedCountryOptions: boolean
   isLoadingCountryOptions: boolean
   addProduct: (product: Product) => void
   updateProduct: (product: Product) => void
   deleteProduct: (productId: string) => void
+  updateCartItemQuantity: (cartItemId: string, quantity: number) => void
+  removeCartItem: (cartItemId: string) => void
+  toggleSavedCartItem: (cartItemId: string) => void
   initializeCountryOptions: () => Promise<void>
 }
 
@@ -139,6 +144,7 @@ const initialCountryOptions = buildCountryOptions(
 
 export const useMarketStore = create<MarketStore>()((set, get) => ({
   products: INITIAL_PRODUCTS,
+  cartItems: INITIAL_CART_ITEMS,
   countryOptions: initialCountryOptions,
   hasInitializedCountryOptions: false,
   isLoadingCountryOptions: false,
@@ -170,6 +176,25 @@ export const useMarketStore = create<MarketStore>()((set, get) => ({
         countryOptions: buildCountryOptions(products, state.countryOptions),
       }
     })
+  },
+  updateCartItemQuantity: (cartItemId, quantity) => {
+    set((state) => ({
+      cartItems: state.cartItems.map((item) =>
+        item.id === cartItemId ? { ...item, quantity: Math.max(1, quantity) } : item,
+      ),
+    }))
+  },
+  removeCartItem: (cartItemId) => {
+    set((state) => ({
+      cartItems: state.cartItems.filter((item) => item.id !== cartItemId),
+    }))
+  },
+  toggleSavedCartItem: (cartItemId) => {
+    set((state) => ({
+      cartItems: state.cartItems.map((item) =>
+        item.id === cartItemId ? { ...item, saved: !item.saved } : item,
+      ),
+    }))
   },
   initializeCountryOptions: async () => {
     const { hasInitializedCountryOptions, isLoadingCountryOptions } = get()

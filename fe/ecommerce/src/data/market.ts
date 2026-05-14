@@ -1,4 +1,9 @@
-import type { Product, ProductFilters, ProductFormValues } from '../types/product'
+import type {
+  CartItem,
+  Product,
+  ProductFilters,
+  ProductFormValues,
+} from '../types/product'
 
 export type CountryOption = {
   value: string
@@ -515,6 +520,54 @@ const BASE_PRODUCTS = [
 ]
 
 export const INITIAL_PRODUCTS: Product[] = BASE_PRODUCTS.map(withProductMockData)
+
+export const INITIAL_CART_ITEMS: CartItem[] = [
+  {
+    id: 'cart-001',
+    category: 'Áo',
+    name: 'Áo thun unisex Essential Cotton',
+    image:
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80',
+    unitPrice: 320000,
+    quantity: 2,
+    color: {
+      name: 'Kem vani',
+      hex: '#dcc7a1',
+    },
+    size: 'Size M',
+    saved: false,
+  },
+  {
+    id: 'cart-002',
+    category: 'Áo',
+    name: 'Áo sơ mi Oxford tay dài',
+    image:
+      'https://images.unsplash.com/photo-1603252109303-2751441dd157?auto=format&fit=crop&w=900&q=80',
+    unitPrice: 590000,
+    quantity: 1,
+    color: {
+      name: 'Trắng',
+      hex: '#f5f5f4',
+    },
+    size: 'Size L',
+    saved: false,
+  },
+  {
+    id: 'cart-003',
+    category: 'Quần',
+    name: 'Quần jeans slim fit dáng suôn',
+    image:
+      'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80',
+    unitPrice: 650000,
+    quantity: 1,
+    color: {
+      name: 'Xanh đậm',
+      hex: '#1f3a68',
+    },
+    size: 'Size 32',
+    saved: false,
+  },
+]
 
 export const MAX_COST = 2500000
 export const COST_STEP = 50000

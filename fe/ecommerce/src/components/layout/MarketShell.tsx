@@ -6,7 +6,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { useEffect } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useMarketStore } from '../../store/useMarketStore'
 
@@ -47,10 +47,12 @@ const adminLinks = [
 
 export function MarketShell({ area }: MarketShellProps) {
   const products = useMarketStore((state) => state.products)
+  const cartItems = useMarketStore((state) => state.cartItems)
   const initializeCountryOptions = useMarketStore(
     (state) => state.initializeCountryOptions,
   )
   const links = area === 'admin' ? adminLinks : userLinks
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   useEffect(() => {
     void initializeCountryOptions()
@@ -89,13 +91,16 @@ export function MarketShell({ area }: MarketShellProps) {
 
           {area === 'user' ? (
             <div className="flex items-center gap-2">
-              <button
-                type="button"
+              <Link
+                to="/cart"
                 aria-label="Giỏ hàng"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#3a2e1d] bg-[#18120d] text-[#d8c9ae] transition hover:border-[#8b6f38] hover:text-[#f4ab22]"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#3a2e1d] bg-[#18120d] text-[#d8c9ae] transition hover:border-[#8b6f38] hover:text-[#f4ab22]"
               >
+                <span className="absolute -right-0.5 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#f4ab22] px-1 text-[0.68rem] font-black leading-none text-[#17120d]">
+                  {cartCount}
+                </span>
                 <ShoppingCart className="h-4.5 w-4.5" />
-              </button>
+              </Link>
               <button
                 type="button"
                 aria-label="Tài khoản"

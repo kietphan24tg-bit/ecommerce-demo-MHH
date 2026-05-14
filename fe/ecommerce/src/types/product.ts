@@ -25,6 +25,21 @@ export type Product = {
   sizeGuide: string
 }
 
+export type CartItem = {
+  id: string
+  category: string
+  name: string
+  image: string
+  unitPrice: number
+  quantity: number
+  color: {
+    name: string
+    hex: string
+  }
+  size: string
+  saved: boolean
+}
+
 export type ProductFormValues = {
   name: string
   image: string
