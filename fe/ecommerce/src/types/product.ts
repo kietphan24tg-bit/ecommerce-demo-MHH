@@ -14,10 +14,13 @@ export type Product = {
   image: string
   images: string[]
   cost: number
+  originalPrice?: number
   description: string
   country: string
   category: string
   rating: number
+  status?: 'active' | 'inactive'
+  inStock?: boolean
   colors: ProductColor[]
   sizes: string[]
   benefits: ProductBenefit[]
@@ -27,6 +30,7 @@ export type Product = {
 
 export type CartItem = {
   id: string
+  productId?: string
   category: string
   name: string
   image: string
@@ -38,6 +42,24 @@ export type CartItem = {
   }
   size: string
   saved: boolean
+}
+
+export type SavedItem = {
+  id: string
+  productId: string
+  category: string
+  name: string
+  image: string
+  price: number
+  originalPrice?: number
+  rating: number
+  reviewCount: number
+  country: string
+  savedAtLabel: string
+  accentTag?: string
+  inStock: boolean
+  colors: ProductColor[]
+  size: string
 }
 
 export type ProductFormValues = {

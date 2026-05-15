@@ -20,12 +20,25 @@ export function ProductCard({ product }: ProductCardProps) {
   const displayName = localized?.name ?? product.name
   const displayDescription = localized?.description ?? product.description
   const displayCategory = localized?.category ?? product.category
+  const discount = product.originalPrice
+    ? Math.max(0, Math.round((1 - product.cost / product.originalPrice) * 100))
+    : null
 
   return (
     <Link
       to={`/products/${product.id}`}
       className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-[#342614] bg-[#090b10] transition duration-300 hover:-translate-y-1 hover:border-[#6f4d1c] hover:shadow-[0_18px_44px_rgba(0,0,0,0.22)]"
     >
+      {discount ? (
+        <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-wrap gap-2">
+          {discount ? (
+            <span className="rounded-full bg-[#ea580c] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-[0_10px_24px_rgba(234,88,12,0.3)]">
+              -{discount}%
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
       <ProductIllustration
         category={displayCategory}
         productId={product.id}
@@ -45,6 +58,11 @@ export function ProductCard({ product }: ProductCardProps) {
             <p className="font-display text-[1.8rem] font-bold leading-none text-[#f5b024] sm:text-[1.9rem]">
               {formatCurrency(product.cost)}
             </p>
+            {product.originalPrice ? (
+              <p className="mt-2 text-sm font-medium text-[#8d887f] line-through">
+                {formatCurrency(product.originalPrice)}
+              </p>
+            ) : null}
           </div>
 
           <div className="pb-1 text-right">

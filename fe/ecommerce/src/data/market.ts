@@ -3,11 +3,18 @@ import type {
   Product,
   ProductFilters,
   ProductFormValues,
+  SavedItem,
 } from '../types/product'
+import type { AdminCategory } from '../types/admin'
 
 export type CountryOption = {
   value: string
   label: string
+}
+
+export type MonthlyRevenuePoint = {
+  mon: string
+  rev: number
 }
 
 const PRODUCT_IMAGE_THEMES: Record<
@@ -268,8 +275,30 @@ function withProductMockData(
     'images' | 'colors' | 'sizes' | 'benefits' | 'tags' | 'sizeGuide'
   >,
 ): Product {
+  const originalPriceMap: Record<string, number> = {
+    'fashion-002': 750000,
+    'fashion-004': 1500000,
+    'fashion-008': 520000,
+    'fashion-010': 2150000,
+    'fashion-014': 620000,
+    'fashion-017': 890000,
+    'fashion-020': 690000,
+  }
+
+  const statusMap: Record<string, 'active' | 'inactive'> = {
+    'fashion-003': 'inactive',
+    'fashion-007': 'inactive',
+    'fashion-013': 'inactive',
+    'fashion-019': 'inactive',
+  }
+
+  const outOfStockIds = new Set(['fashion-008', 'fashion-013'])
+
   return {
     ...product,
+    originalPrice: originalPriceMap[product.id] ?? product.cost,
+    status: statusMap[product.id] ?? 'active',
+    inStock: !outOfStockIds.has(product.id),
     ...createProductMockData(product),
   }
 }
@@ -521,9 +550,76 @@ const BASE_PRODUCTS = [
 
 export const INITIAL_PRODUCTS: Product[] = BASE_PRODUCTS.map(withProductMockData)
 
+export const INITIAL_ADMIN_CATEGORIES: AdminCategory[] = [
+  {
+    id: 'ao',
+    name: 'Áo',
+    slug: 'ao',
+    desc: 'Áo thun, sơ mi, len, khoác',
+    color: '#F7931A',
+    status: 'active',
+  },
+  {
+    id: 'quan',
+    name: 'Quần',
+    slug: 'quan',
+    desc: 'Jeans, tây, cargo, short',
+    color: '#c8a84b',
+    status: 'active',
+  },
+  {
+    id: 'giay',
+    name: 'Giày',
+    slug: 'giay',
+    desc: 'Sneaker, running, loafer, boots',
+    color: '#ea580c',
+    status: 'active',
+  },
+  {
+    id: 'dep',
+    name: 'Dép',
+    slug: 'dep',
+    desc: 'Slide, sandal, dép quai ngang',
+    color: '#14b8a6',
+    status: 'active',
+  },
+  {
+    id: 'tui',
+    name: 'Túi',
+    slug: 'tui',
+    desc: 'Tote, sling, hobo',
+    color: '#e879a8',
+    status: 'inactive',
+  },
+  {
+    id: 'phu-kien',
+    name: 'Phụ kiện',
+    slug: 'phu-kien',
+    desc: 'Mũ, thắt lưng, kính, khăn',
+    color: '#94a3b8',
+    status: 'active',
+  },
+]
+
+export const ADMIN_MONTHLY_REVENUE: MonthlyRevenuePoint[] = [
+  { mon: 'T1', rev: 12 },
+  { mon: 'T2', rev: 19 },
+  { mon: 'T3', rev: 14 },
+  { mon: 'T4', rev: 27 },
+  { mon: 'T5', rev: 22 },
+  { mon: 'T6', rev: 31 },
+  { mon: 'T7', rev: 38 },
+  { mon: 'T8', rev: 29 },
+  { mon: 'T9', rev: 42 },
+  { mon: 'T10', rev: 36 },
+  { mon: 'T11', rev: 55 },
+  { mon: 'T12', rev: 48 },
+]
+
 export const INITIAL_CART_ITEMS: CartItem[] = [
   {
     id: 'cart-001',
+    productId: 'fashion-001',
     category: 'Áo',
     name: 'Áo thun unisex Essential Cotton',
     image:
@@ -539,6 +635,7 @@ export const INITIAL_CART_ITEMS: CartItem[] = [
   },
   {
     id: 'cart-002',
+    productId: 'fashion-002',
     category: 'Áo',
     name: 'Áo sơ mi Oxford tay dài',
     image:
@@ -554,6 +651,7 @@ export const INITIAL_CART_ITEMS: CartItem[] = [
   },
   {
     id: 'cart-003',
+    productId: 'fashion-005',
     category: 'Quần',
     name: 'Quần jeans slim fit dáng suôn',
     image:
@@ -567,6 +665,114 @@ export const INITIAL_CART_ITEMS: CartItem[] = [
     size: 'Size 32',
     saved: false,
   },
+]
+
+function createSavedItem(
+  productId: string,
+  options: {
+    id: string
+    savedAtLabel: string
+    size: string
+    colorIndexes: number[]
+    originalPrice?: number
+    reviewCount: number
+    accentTag?: string
+    inStock?: boolean
+  },
+): SavedItem {
+  const product = INITIAL_PRODUCTS.find((item) => item.id === productId)
+
+  if (!product) {
+    throw new Error(`Missing product for saved item: ${productId}`)
+  }
+
+  return {
+    id: options.id,
+    productId: product.id,
+    category: product.category,
+    name: product.name,
+    image: product.image,
+    price: product.cost,
+    originalPrice: options.originalPrice,
+    rating: product.rating,
+    reviewCount: options.reviewCount,
+    country: product.country,
+    savedAtLabel: options.savedAtLabel,
+    accentTag: options.accentTag,
+    inStock: options.inStock ?? true,
+    colors: options.colorIndexes
+      .map((colorIndex) => product.colors[colorIndex])
+      .filter((color): color is Product['colors'][number] => Boolean(color)),
+    size: options.size,
+  }
+}
+
+export const INITIAL_SAVED_ITEMS: SavedItem[] = [
+  createSavedItem('fashion-001', {
+    id: 'saved-001',
+    savedAtLabel: 'Lưu 2 ngày trước',
+    size: 'M',
+    colorIndexes: [0, 1, 2, 3],
+    reviewCount: 128,
+  }),
+  createSavedItem('fashion-002', {
+    id: 'saved-002',
+    savedAtLabel: 'Lưu 3 ngày trước',
+    size: 'L',
+    colorIndexes: [1, 2, 3],
+    originalPrice: 750000,
+    reviewCount: 86,
+    accentTag: '-21%',
+  }),
+  createSavedItem('fashion-007', {
+    id: 'saved-003',
+    savedAtLabel: 'Lưu 5 ngày trước',
+    size: '32',
+    colorIndexes: [1, 2, 3],
+    reviewCount: 204,
+  }),
+  createSavedItem('fashion-004', {
+    id: 'saved-004',
+    savedAtLabel: 'Lưu 1 tuần trước',
+    size: 'XL',
+    colorIndexes: [1, 2, 3],
+    originalPrice: 1500000,
+    reviewCount: 74,
+    accentTag: '-17%',
+  }),
+  createSavedItem('fashion-013', {
+    id: 'saved-005',
+    savedAtLabel: 'Lưu 10 ngày trước',
+    size: '41',
+    colorIndexes: [0, 1, 2],
+    reviewCount: 48,
+    inStock: false,
+  }),
+  createSavedItem('fashion-017', {
+    id: 'saved-006',
+    savedAtLabel: 'Lưu 8 ngày trước',
+    size: 'One size',
+    colorIndexes: [0, 1, 2, 3],
+    originalPrice: 890000,
+    reviewCount: 61,
+    accentTag: '-19%',
+  }),
+  createSavedItem('fashion-016', {
+    id: 'saved-007',
+    savedAtLabel: 'Lưu 2 tuần trước',
+    size: 'One size',
+    colorIndexes: [2, 3],
+    reviewCount: 312,
+  }),
+  createSavedItem('fashion-020', {
+    id: 'saved-008',
+    savedAtLabel: 'Lưu 3 tuần trước',
+    size: '100',
+    colorIndexes: [0, 1],
+    originalPrice: 350000,
+    reviewCount: 68,
+    accentTag: '-20%',
+  }),
 ]
 
 export const MAX_COST = 2500000

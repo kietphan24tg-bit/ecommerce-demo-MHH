@@ -35,6 +35,10 @@ function ProductPage() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
+      if ((product.status ?? 'active') !== 'active') {
+        return false
+      }
+
       if (filters.country !== 'All' && product.country !== filters.country) {
         return false
       }

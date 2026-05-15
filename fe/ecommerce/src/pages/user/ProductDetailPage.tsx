@@ -185,7 +185,7 @@ function benefitIcon(title: string) {
 function ProductDetailPage() {
   const { id } = useParams()
   const products = useMarketStore((state) => state.products)
-  const product = products.find((item) => item.id === id)
+  const product = products.find((item) => item.id === id && (item.status ?? 'active') === 'active')
 
   const mediaItems = useMemo(() => (product ? buildMediaItems(product) : []), [product])
 
@@ -231,6 +231,9 @@ function ProductDetailPage() {
   const selectedColorData = product.colors[selectedColor] ?? product.colors[0]
   const selectedSizeData = product.sizes[selectedSize] ?? product.sizes[0]
   const displaySizeGuide = getSizeGuide(product)
+  const discount = product.originalPrice
+    ? Math.max(0, Math.round((1 - product.cost / product.originalPrice) * 100))
+    : null
 
   return (
     <section className="min-h-[calc(100svh-76px)] border-x border-[#221a10] bg-[#120e0a] px-4 py-5 sm:px-6 lg:px-8">
@@ -293,9 +296,21 @@ function ProductDetailPage() {
                 <span className="text-sm text-[#7f7568]">{product.rating}.0 / 5</span>
               </div>
 
-              <p className="mt-5 font-display text-[2.15rem] font-bold leading-none tracking-[-0.03em] text-[#f4b321] sm:text-[2.45rem] lg:text-[2.6rem]">
-                {formatCurrency(product.cost)}
-              </p>
+              <div className="mt-5 flex flex-wrap items-end gap-3">
+                <p className="font-display text-[2.15rem] font-bold leading-none tracking-[-0.03em] text-[#f4b321] sm:text-[2.45rem] lg:text-[2.6rem]">
+                  {formatCurrency(product.cost)}
+                </p>
+                {product.originalPrice ? (
+                  <p className="pb-1 text-lg font-medium text-[#8b816f] line-through">
+                    {formatCurrency(product.originalPrice)}
+                  </p>
+                ) : null}
+                {discount ? (
+                  <span className="inline-flex rounded-full bg-[#ea580c] px-3 py-1 text-sm font-bold text-white">
+                    -{discount}%
+                  </span>
+                ) : null}
+              </div>
 
               <div className="mt-6 border-t border-[#2a2114] pt-5">
                 <div>

@@ -1,16 +1,19 @@
 import {
+  ArrowRight,
   ChevronLeft,
+  ChevronRight,
   Heart,
   LockKeyhole,
   Minus,
   Plus,
   RefreshCcw,
   Shield,
+  ShoppingBag,
   Tag,
   Trash2,
   Truck,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createProductImage } from '../../data/market'
 import { useMarketStore } from '../../store/useMarketStore'
@@ -18,6 +21,9 @@ import type { CartItem } from '../../types/product'
 
 const FREE_SHIPPING_THRESHOLD = 500000
 const STANDARD_SHIPPING_FEE = 30000
+const CART_ITEMS_PER_PAGE = 4
+
+type PaginationItem = number | '...'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('vi-VN', {
@@ -25,6 +31,22 @@ function formatCurrency(value: number) {
     currency: 'VND',
     maximumFractionDigits: 0,
   }).format(value)
+}
+
+function buildPagination(currentPage: number, totalPages: number): PaginationItem[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, 4, '...', totalPages]
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+  }
+
+  return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
 }
 
 function normalizeText(value: string) {
@@ -196,12 +218,64 @@ function BenefitRow({
   )
 }
 
+function CartEmptyState() {
+  return (
+    <div className="relative overflow-hidden rounded-[32px] border border-[#342a1f] bg-[radial-gradient(circle_at_top_left,rgba(255,170,39,0.16),transparent_32%),linear-gradient(180deg,#1b140e_0%,#120d09_100%)] px-6 py-8 shadow-[0_24px_48px_rgba(0,0,0,0.24)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+      <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-[#f3b232]/10 blur-3xl" />
+
+      <div className="relative max-w-[620px]">
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-[20px] border border-[#6b4a16] bg-[#22170d] text-[#f4b321] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <ShoppingBag className="h-7 w-7" strokeWidth={2.1} />
+        </div>
+
+        <p className="mt-6 text-[0.74rem] font-semibold uppercase tracking-[0.32em] text-[#a88e63]">
+          Giỏ hàng trống
+        </p>
+        <h2 className="mt-3 max-w-[11ch] font-display text-[2rem] font-bold leading-[0.95] tracking-[-0.05em] text-[#f8f2e9] sm:text-[2.5rem]">
+          Chọn món mới cho tủ đồ của bạn
+        </h2>
+        <p className="mt-4 max-w-[540px] text-[0.98rem] leading-7 text-[#9e8f7e]">
+          Chưa có sản phẩm nào trong giỏ. Khám phá bộ sưu tập đang mở bán để thêm áo,
+          quần, giày và phụ kiện trước khi thanh toán.
+        </p>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          <span className="inline-flex items-center rounded-full border border-[#4b3926] bg-[#18110c] px-4 py-2 text-[0.88rem] text-[#dec9aa]">
+            Miễn phí vận chuyển từ 500.000 đ
+          </span>
+          <span className="inline-flex items-center rounded-full border border-[#4b3926] bg-[#18110c] px-4 py-2 text-[0.88rem] text-[#dec9aa]">
+            Đổi trả trong 30 ngày
+          </span>
+          <span className="inline-flex items-center rounded-full border border-[#4b3926] bg-[#18110c] px-4 py-2 text-[0.88rem] text-[#dec9aa]">
+            Hàng chính hãng bảo hành 6 tháng
+          </span>
+        </div>
+
+        <div className="mt-9 flex flex-wrap items-center gap-4">
+          <Link
+            to="/"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(90deg,#ff5b05_0%,#ff9f1c_100%)] px-6 text-[0.94rem] font-bold text-white shadow-[0_16px_32px_rgba(255,133,20,0.24)] transition hover:brightness-105"
+          >
+            Khám phá sản phẩm
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+
+          <span className="text-[0.92rem] text-[#7f7263]">
+            Thêm sản phẩm để xem tổng tiền và áp dụng mã giảm giá.
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CartPage() {
   const cartItems = useMarketStore((state) => state.cartItems)
   const updateCartItemQuantity = useMarketStore((state) => state.updateCartItemQuantity)
   const removeCartItem = useMarketStore((state) => state.removeCartItem)
   const toggleSavedCartItem = useMarketStore((state) => state.toggleSavedCartItem)
   const [promoCode, setPromoCode] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const itemCount = useMemo(
     () => cartItems.reduce((total, item) => total + item.quantity, 0),
@@ -211,10 +285,23 @@ function CartPage() {
     () => cartItems.reduce((total, item) => total + item.unitPrice * item.quantity, 0),
     [cartItems],
   )
+  const totalPages = Math.max(1, Math.ceil(cartItems.length / CART_ITEMS_PER_PAGE))
+  const paginatedCartItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * CART_ITEMS_PER_PAGE
+    return cartItems.slice(startIndex, startIndex + CART_ITEMS_PER_PAGE)
+  }, [cartItems, currentPage])
+  const paginationItems = useMemo(
+    () => buildPagination(currentPage, totalPages),
+    [currentPage, totalPages],
+  )
 
-  const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE
+  const isCartEmpty = cartItems.length === 0
+  const shippingFee = isCartEmpty ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE
   const total = subtotal + shippingFee
-  const recommendedCodes = ['ESHOP10', 'FASHION20', 'NEWUSER15']
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages))
+  }, [totalPages])
 
   return (
     <section className="min-h-[calc(100svh-76px)] border-x border-[#221a10] bg-[#0b0806] px-5 py-7 sm:px-6 lg:px-8">
@@ -236,18 +323,81 @@ function CartPage() {
 
         <div className="mt-9 flex flex-col gap-6 xl:flex-row xl:items-start">
           <div className="min-w-0 flex-1 xl:max-w-[930px]">
-            <div className="overflow-hidden rounded-[28px] border border-[#342a1f] bg-[#1d1712] shadow-[0_18px_32px_rgba(0,0,0,0.16)]">
-              {cartItems.map((item) => (
-                <CartLineItem
-                  key={item.id}
-                  item={item}
-                  onDecrease={() => updateCartItemQuantity(item.id, item.quantity - 1)}
-                  onIncrease={() => updateCartItemQuantity(item.id, item.quantity + 1)}
-                  onRemove={() => removeCartItem(item.id)}
-                  onToggleSaved={() => toggleSavedCartItem(item.id)}
-                />
-              ))}
-            </div>
+            {isCartEmpty ? (
+              <CartEmptyState />
+            ) : (
+              <>
+                <div className="overflow-hidden rounded-[28px] border border-[#342a1f] bg-[#1d1712] shadow-[0_18px_32px_rgba(0,0,0,0.16)]">
+                  {paginatedCartItems.map((item) => (
+                    <CartLineItem
+                      key={item.id}
+                      item={item}
+                      onDecrease={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                      onIncrease={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                      onRemove={() => removeCartItem(item.id)}
+                      onToggleSaved={() => toggleSavedCartItem(item.id)}
+                    />
+                  ))}
+                </div>
+
+                {cartItems.length > CART_ITEMS_PER_PAGE ? (
+                  <div className="mt-6 flex flex-col gap-4 border-t border-[#221a10] pt-5 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-medium text-[#8f8578]">
+                      Hiển thị {(currentPage - 1) * CART_ITEMS_PER_PAGE + 1}-
+                      {Math.min(currentPage * CART_ITEMS_PER_PAGE, cartItems.length)} /{' '}
+                      {cartItems.length} dòng sản phẩm
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                        disabled={currentPage === 1}
+                        className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-[#3b2c18] bg-[#110d09] px-3 text-sm font-semibold text-[#eadfcb] transition hover:border-[#8b6f38] hover:text-[#ffcb63] disabled:cursor-not-allowed disabled:opacity-45"
+                        aria-label="Trang trước"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+
+                      {paginationItems.map((item, index) =>
+                        item === '...' ? (
+                          <span
+                            key={`ellipsis-${index}`}
+                            className="inline-flex h-10 min-w-10 items-center justify-center text-sm font-semibold text-[#7f7568]"
+                          >
+                            ...
+                          </span>
+                        ) : (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => setCurrentPage(item)}
+                            aria-current={currentPage === item ? 'page' : undefined}
+                            className={`inline-flex h-10 min-w-10 items-center justify-center rounded-full border px-3 text-sm font-semibold transition ${
+                              currentPage === item
+                                ? 'border-[#f3b232] bg-[#f3b232] text-[#140f09]'
+                                : 'border-[#3b2c18] bg-[#110d09] text-[#eadfcb] hover:border-[#8b6f38] hover:text-[#ffcb63]'
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ),
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                        disabled={currentPage === totalPages}
+                        className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-[#3b2c18] bg-[#110d09] px-3 text-sm font-semibold text-[#eadfcb] transition hover:border-[#8b6f38] hover:text-[#ffcb63] disabled:cursor-not-allowed disabled:opacity-45"
+                        aria-label="Trang sau"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
 
             <div className="mt-5">
               <Link
@@ -290,7 +440,8 @@ function CartPage() {
 
                   <button
                     type="button"
-                    className="mt-7 inline-flex h-[58px] w-full items-center justify-center rounded-[16px] bg-[linear-gradient(90deg,#ff5b05_0%,#ff9f1c_100%)] px-6 text-[0.98rem] font-extrabold uppercase tracking-[0.04em] text-white shadow-[0_16px_32px_rgba(255,133,20,0.28)] transition hover:brightness-105"
+                    disabled={isCartEmpty}
+                    className="mt-7 inline-flex h-[58px] w-full items-center justify-center rounded-[16px] bg-[linear-gradient(90deg,#ff5b05_0%,#ff9f1c_100%)] px-6 text-[0.98rem] font-extrabold uppercase tracking-[0.04em] text-white shadow-[0_16px_32px_rgba(255,133,20,0.28)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100"
                   >
                     TIẾN HÀNH THANH TOÁN →
                   </button>
@@ -313,19 +464,25 @@ function CartPage() {
                 <input
                   value={promoCode}
                   onChange={(event) => setPromoCode(event.target.value)}
+                  disabled={isCartEmpty}
                   placeholder="Nhập mã giảm giá"
-                  className="h-12 min-w-0 flex-1 rounded-[12px] border border-[#403427] bg-[#14110e] px-4 text-[0.96rem] text-[#f4efe6] outline-none transition placeholder:text-[#776c60] focus:border-[#7b5d28]"
+                  className="h-12 min-w-0 flex-1 rounded-[12px] border border-[#403427] bg-[#14110e] px-4 text-[0.96rem] text-[#f4efe6] outline-none transition placeholder:text-[#776c60] focus:border-[#7b5d28] disabled:cursor-not-allowed disabled:opacity-45"
                 />
                 <button
                   type="submit"
-                  className="inline-flex h-12 shrink-0 items-center justify-center rounded-[12px] border border-[#45382a] px-5 text-[0.96rem] font-bold text-[#f4efe6] transition hover:border-[#7b5d28] hover:text-[#f4b321]"
+                  disabled={isCartEmpty}
+                  className="inline-flex h-12 shrink-0 items-center justify-center rounded-[12px] border border-[#45382a] px-5 text-[0.96rem] font-bold text-[#f4efe6] transition hover:border-[#7b5d28] hover:text-[#f4b321] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-[#45382a] disabled:hover:text-[#f4efe6]"
                 >
                   Áp dụng
                 </button>
               </form>
 
-              <p className="mt-3 text-[0.88rem] text-[#ff4d4f]">Mã không hợp lệ hoặc đã hết hạn.</p>
-              <p className="mt-3 text-[0.88rem] text-[#776c60]">Thử: {recommendedCodes.join(' · ')}</p>
+              {isCartEmpty ? (
+                <p className="mt-3 text-[0.88rem] leading-6 text-[#776c60]">
+                  Thêm ít nhất một sản phẩm vào giỏ để sử dụng ưu đãi.
+                </p>
+              ) : null}
+
             </div>
 
             <div className="rounded-[28px] border border-[#342a1f] bg-[#1d1712] px-6 py-6 shadow-[0_18px_32px_rgba(0,0,0,0.16)]">

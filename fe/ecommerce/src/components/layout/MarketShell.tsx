@@ -1,4 +1,5 @@
 import {
+  Heart,
   LayoutDashboard,
   Package2,
   ShieldHalf,
@@ -16,7 +17,7 @@ type MarketShellProps = {
 
 function BrandLockup() {
   return (
-    <div className="flex items-center gap-3">
+    <Link to="/" className="flex items-center gap-3 transition hover:opacity-95">
       <div className="relative flex h-[48px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-r-[12px] rounded-l-[4px] bg-[#f4b321] shadow-[0_8px_22px_rgba(244,171,34,0.16)]">
         <div className="absolute inset-y-0 left-0 w-2.5 bg-[#cc920f]" />
         <div className="absolute inset-y-0 left-2.5 w-[3px] bg-black/12" />
@@ -33,7 +34,7 @@ function BrandLockup() {
           Fashion Store
         </p>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -45,14 +46,48 @@ const adminLinks = [
   { to: '/admin/product', label: 'Product', icon: Package2 },
 ]
 
+function IconBadgeLink({
+  to,
+  label,
+  count,
+  icon: Icon,
+}: {
+  to: string
+  label: string
+  count: number
+  icon: typeof Heart
+}) {
+  return (
+    <NavLink
+      to={to}
+      aria-label={label}
+      className={({ isActive }) =>
+        cn(
+          'relative flex h-11 w-11 items-center justify-center rounded-full border bg-[#18120d] transition',
+          isActive
+            ? 'border-[#8b6f38] text-[#f4ab22]'
+            : 'border-[#3a2e1d] text-[#d8c9ae] hover:border-[#8b6f38] hover:text-[#f4ab22]',
+        )
+      }
+    >
+      <span className="absolute -right-0.5 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#f4ab22] px-1 text-[0.68rem] font-black leading-none text-[#17120d]">
+        {count}
+      </span>
+      <Icon className="h-4.5 w-4.5" />
+    </NavLink>
+  )
+}
+
 export function MarketShell({ area }: MarketShellProps) {
   const products = useMarketStore((state) => state.products)
   const cartItems = useMarketStore((state) => state.cartItems)
+  const savedItems = useMarketStore((state) => state.savedItems)
   const initializeCountryOptions = useMarketStore(
     (state) => state.initializeCountryOptions,
   )
   const links = area === 'admin' ? adminLinks : userLinks
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+  const savedCount = savedItems.length
 
   useEffect(() => {
     void initializeCountryOptions()
@@ -91,16 +126,8 @@ export function MarketShell({ area }: MarketShellProps) {
 
           {area === 'user' ? (
             <div className="flex items-center gap-2">
-              <Link
-                to="/cart"
-                aria-label="Giỏ hàng"
-                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#3a2e1d] bg-[#18120d] text-[#d8c9ae] transition hover:border-[#8b6f38] hover:text-[#f4ab22]"
-              >
-                <span className="absolute -right-0.5 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#f4ab22] px-1 text-[0.68rem] font-black leading-none text-[#17120d]">
-                  {cartCount}
-                </span>
-                <ShoppingCart className="h-4.5 w-4.5" />
-              </Link>
+              <IconBadgeLink to="/saved" label="Đã lưu" count={savedCount} icon={Heart} />
+              <IconBadgeLink to="/cart" label="Giỏ hàng" count={cartCount} icon={ShoppingCart} />
               <button
                 type="button"
                 aria-label="Tài khoản"

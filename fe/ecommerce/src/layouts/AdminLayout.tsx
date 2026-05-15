@@ -1,7 +1,7 @@
-import { MarketShell } from '../components/layout/MarketShell'
+import { AdminShell } from '../components/admin/AdminShell'
 
 function AdminLayout() {
-  return <MarketShell area="admin" />
+  return <AdminShell />
 }
 
 export default AdminLayout
