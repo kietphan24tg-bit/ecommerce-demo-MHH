@@ -185,6 +185,9 @@ function benefitIcon(title: string) {
 function ProductDetailPage() {
   const { id } = useParams()
   const products = useMarketStore((state) => state.products)
+  const savedItems = useMarketStore((state) => state.savedItems)
+  const addProductToCart = useMarketStore((state) => state.addProductToCart)
+  const toggleSavedProduct = useMarketStore((state) => state.toggleSavedProduct)
   const product = products.find((item) => item.id === id && (item.status ?? 'active') === 'active')
 
   const mediaItems = useMemo(() => (product ? buildMediaItems(product) : []), [product])
@@ -231,6 +234,14 @@ function ProductDetailPage() {
   const selectedColorData = product.colors[selectedColor] ?? product.colors[0]
   const selectedSizeData = product.sizes[selectedSize] ?? product.sizes[0]
   const displaySizeGuide = getSizeGuide(product)
+  const isSaved = savedItems.some(
+    (item) => item.productId === product.id && item.size === selectedSizeData,
+  )
+  const displayTags = product.tags.map((tag) =>
+    tag.toLowerCase().includes('đánh giá') || tag.toLowerCase().includes('danh gia')
+      ? 'Đánh giá 0/5'
+      : tag,
+  )
   const discount = product.originalPrice
     ? Math.max(0, Math.round((1 - product.cost / product.originalPrice) * 100))
     : null
@@ -416,6 +427,13 @@ function ProductDetailPage() {
                 <div className="mt-7 space-y-3">
                   <button
                     type="button"
+                    onClick={() =>
+                      addProductToCart(product, {
+                        quantity,
+                        colorIndex: selectedColor,
+                        sizeIndex: selectedSize,
+                      })
+                    }
                     className="inline-flex w-full items-center justify-center gap-3 rounded-[14px] border border-[#5a4a31] bg-[#17120d] px-5 py-4 text-lg font-extrabold uppercase tracking-[0.04em] text-[#f7f1e3] transition hover:border-[#f4b321] hover:text-[#f4b321]"
                   >
                     <ShoppingCart className="h-5 w-5" />
@@ -424,7 +442,18 @@ function ProductDetailPage() {
 
                   <button
                     type="button"
-                    className="inline-flex w-full items-center justify-center gap-3 rounded-[14px] border border-[#3b3124] bg-transparent px-5 py-4 text-lg font-bold text-[#efe3c7] transition hover:border-[#6f5430] hover:text-white"
+                    onClick={() =>
+                      toggleSavedProduct(product, {
+                        colorIndex: selectedColor,
+                        sizeIndex: selectedSize,
+                      })
+                    }
+                    className={cn(
+                      'inline-flex w-full items-center justify-center gap-3 rounded-[14px] px-5 py-4 text-lg font-bold transition',
+                      isSaved
+                        ? 'border border-[#f4b321] bg-[#f4b321] text-[#1a140c]'
+                        : 'border border-[#3b3124] bg-transparent text-[#efe3c7] hover:border-[#6f5430] hover:text-white',
+                    )}
                   >
                     <Heart className="h-5 w-5" />
                     Lưu yêu thích
@@ -453,7 +482,7 @@ function ProductDetailPage() {
             <p className="mt-4 text-xl leading-[1.8] text-[#b7ab96]">{product.description}</p>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              {product.tags.map((tag) => (
+              {displayTags.map((tag) => (
                 <span
                   key={tag}
                   className="inline-flex rounded-full border border-[#33291c] bg-[#17130f] px-4 py-2 text-base text-[#948771]"

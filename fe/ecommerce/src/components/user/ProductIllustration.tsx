@@ -242,11 +242,26 @@ export function ProductIllustration({
         ) : (
           <div
             className={cn(
-              'relative flex h-[148px] w-[186px] items-center justify-center sm:h-[164px] sm:w-[198px]',
+              'relative flex h-[148px] w-[186px] flex-col items-center justify-center overflow-hidden rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-6 text-center sm:h-[164px] sm:w-[198px]',
               tone.glow,
             )}
           >
-            <IllustrationGlyph category={category} />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.08),transparent_38%)]" />
+            <div className="absolute inset-3 rounded-[18px] border border-white/6" />
+            <div
+              className={cn(
+                'relative z-[1] h-16 w-16 opacity-90 sm:h-[72px] sm:w-[72px]',
+                tone.accent,
+              )}
+            >
+              <IllustrationGlyph category={category} />
+            </div>
+            <div className="relative z-[1] mt-4 text-[0.62rem] font-semibold uppercase tracking-[0.28em] text-white/42">
+              No Cover
+            </div>
+            <div className="relative z-[1] mt-1 max-w-[12ch] text-[0.8rem] leading-5 text-white/55">
+              Thêm ảnh để sản phẩm nổi bật hơn
+            </div>
           </div>
         )}
       </div>

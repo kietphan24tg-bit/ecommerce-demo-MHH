@@ -21,6 +21,12 @@ type CategoryFormState = {
   status: AdminCategoryStatus
 }
 
+type ToastItem = {
+  id: number
+  type: 'success' | 'error'
+  message: string
+}
+
 const defaultForm: CategoryFormState = {
   name: '',
   desc: '',
@@ -37,7 +43,18 @@ function CategoryPage() {
 
   const [search, setSearch] = useState('')
   const [panel, setPanel] = useState<AdminCategory | 'add' | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null)
+  const [toasts, setToasts] = useState<ToastItem[]>([])
   const [form, setForm] = useState<CategoryFormState>(defaultForm)
+
+  const pushToast = (type: ToastItem['type'], message: string) => {
+    const id = Date.now() + Math.floor(Math.random() * 1000)
+    setToasts((current) => [...current, { id, type, message }])
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id))
+    }, 2800)
+  }
 
   const filteredCategories = useMemo(
     () =>
@@ -62,10 +79,27 @@ function CategoryPage() {
     setPanel(category)
   }
 
-  const handleSave = () => {
-    if (!form.name.trim()) {
+  const handleSave = async () => {
+    if (isSaving) {
       return
     }
+
+    if (!form.name.trim()) {
+      pushToast('error', 'Vui lòng nhập tên danh mục.')
+      return
+    }
+
+    if (!form.desc.trim()) {
+      pushToast('error', 'Vui lòng nhập mô tả danh mục.')
+      return
+    }
+
+    if (!form.color.trim()) {
+      pushToast('error', 'Vui lòng chọn màu nhãn.')
+      return
+    }
+
+    setIsSaving(true)
 
     const payload: AdminCategory = {
       id: panel === 'add' ? slugifyAdminValue(form.name) : panel!.id,
@@ -76,16 +110,29 @@ function CategoryPage() {
       status: form.status,
     }
 
-    if (panel === 'add') {
-      addCategory(payload)
-    } else if (panel) {
-      updateCategory(payload)
-    }
+    try {
+      await new Promise((resolve) => window.setTimeout(resolve, 350))
 
-    setPanel(null)
+      if (panel === 'add') {
+        addCategory(payload)
+        pushToast('success', 'Đã thêm danh mục.')
+      } else if (panel) {
+        updateCategory(payload)
+        pushToast('success', 'Đã cập nhật danh mục.')
+      }
+
+      setPanel(null)
+    } catch {
+      pushToast('error', 'Không thể lưu danh mục. Vui lòng thử lại.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  const handleDelete = (category: AdminCategory) => {
+  const handleDelete = async (category: AdminCategory) => {
+    if (isDeletingId) {
+      return
+    }
     const count = products.filter((product) => product.category === category.name).length
 
     if (count > 0) {
@@ -95,9 +142,50 @@ function CategoryPage() {
 
     deleteCategory(category.id)
   }
+  void handleDelete
+
+  const handleDeleteWithFeedback = async (category: AdminCategory) => {
+    if (isDeletingId) {
+      return
+    }
+
+    const count = products.filter((product) => product.category === category.name).length
+    if (count > 0) {
+      pushToast('error', 'Danh mục này còn sản phẩm. Hãy chuyển sản phẩm trước.')
+      return
+    }
+
+    setIsDeletingId(category.id)
+    try {
+      await new Promise((resolve) => window.setTimeout(resolve, 250))
+      deleteCategory(category.id)
+      pushToast('success', 'Đã xóa danh mục.')
+    } catch {
+      pushToast('error', 'Không thể xóa danh mục. Vui lòng thử lại.')
+    } finally {
+      setIsDeletingId(null)
+    }
+  }
 
   return (
     <div className="flex h-full overflow-hidden">
+      <div className="pointer-events-none fixed right-5 top-5 z-[70] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`rounded-[14px] border px-4 py-3 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.28)] backdrop-blur ${
+              toast.type === 'success'
+                ? 'border-emerald-500/30 bg-emerald-500/12 text-emerald-100'
+                : 'border-red-500/30 bg-red-500/12 text-red-100'
+            }`}
+          >
+            <div className="font-semibold">
+              {toast.type === 'success' ? 'Thành công' : 'Có lỗi xảy ra'}
+            </div>
+            <div className="mt-1 text-[13px] opacity-90">{toast.message}</div>
+          </div>
+        ))}
+      </div>
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AdminToolbar
           right={
@@ -184,8 +272,11 @@ function CategoryPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDelete(category)}
-                            className="inline-flex items-center gap-1 rounded-[8px] border border-red-500/25 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/8"
+                            onClick={() => {
+                              void handleDeleteWithFeedback(category)
+                            }}
+                            disabled={isDeletingId === category.id}
+                            className="inline-flex items-center gap-1 rounded-[8px] border border-red-500/25 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/8 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             <Trash2 size={13} />
                             Xóa
@@ -204,8 +295,15 @@ function CategoryPage() {
       {panel ? (
         <AdminDrawer
           title={panel === 'add' ? 'Thêm danh mục' : 'Sửa danh mục'}
-          onClose={() => setPanel(null)}
-          onSave={handleSave}
+          onClose={() => {
+            if (!isSaving) {
+              setPanel(null)
+            }
+          }}
+          onSave={() => {
+            void handleSave()
+          }}
+          saveLabel={isSaving ? 'Đang lưu...' : 'Lưu'}
         >
           <AdminField label="Tên danh mục">
             <AdminInput

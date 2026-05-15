@@ -1,6 +1,7 @@
-import { ImagePlus, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
+﻿import { ImagePlus, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react'
 import { useMemo, useState, type ChangeEvent } from 'react'
 import { createProductImage, createProductMockData } from '../../data/market'
+import { cn } from '../../lib/utils'
 import {
   AdminBadge,
   AdminDrawer,
@@ -17,6 +18,7 @@ import type { Product } from '../../types/product'
 type ProductFormState = {
   name: string
   image: string
+  gallery: string
   category: string
   originalPrice: string
   discountPercent: string
@@ -24,7 +26,28 @@ type ProductFormState = {
   rating: string
   status: 'active' | 'inactive'
   inStock: boolean
+  description: string
+  sizes: string
+  colors: string
+  sizeGuide: string
 }
+
+type ToastItem = {
+  id: number
+  type: 'success' | 'error'
+  message: string
+}
+
+const colorPresets: Product['colors'] = [
+  { name: 'Kem vani', hex: '#dcc7a1' },
+  { name: 'Den onyx', hex: '#18181b' },
+  { name: 'Nau dat', hex: '#8b5e34' },
+  { name: 'Xanh reu', hex: '#2f6b55' },
+  { name: 'Trang suong', hex: '#e7e5e4' },
+  { name: 'Xanh cobalt', hex: '#2d5bd1' },
+  { name: 'Do gac', hex: '#b91c1c' },
+  { name: 'Vang dat', hex: '#f4b321' },
+]
 
 function getDiscountPercent(product: Pick<Product, 'cost' | 'originalPrice'>) {
   if (!product.originalPrice || product.originalPrice <= 0) {
@@ -38,7 +61,7 @@ function getComputedSalePrice(originalPrice: string, discountPercent: string) {
   const basePrice = Number(originalPrice)
   const discount = Number(discountPercent || '0')
 
-  if (!Number.isFinite(basePrice) || basePrice <= 0) {
+  if (!Number.isFinite(basePrice) || basePrice < 0) {
     return null
   }
 
@@ -49,6 +72,20 @@ function getComputedSalePrice(originalPrice: string, discountPercent: string) {
   return Math.round(basePrice * (1 - discount / 100))
 }
 
+function normalizeDiscountPercent(value: string) {
+  const normalizedValue = value.trim()
+  if (!normalizedValue) {
+    return '0'
+  }
+
+  const parsedValue = Number(normalizedValue)
+  if (!Number.isFinite(parsedValue)) {
+    return '0'
+  }
+
+  return String(parsedValue)
+}
+
 function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
@@ -56,6 +93,42 @@ function readFileAsDataUrl(file: File) {
     reader.onerror = () => reject(reader.error)
     reader.readAsDataURL(file)
   })
+}
+
+function splitCommaSeparatedLines(value: string) {
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function splitLineSeparatedValues(value: string) {
+  return value
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function stringifyColorLines(colors: Product['colors']) {
+  return colors.map((color) => `${color.name}|${color.hex}`).join('\n')
+}
+
+function parseColorLines(value: string, fallback: Product['colors']) {
+  const parsed = value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name, hex] = line.split('|').map((part) => part.trim())
+      if (!name || !hex) {
+        return null
+      }
+
+      return { name, hex }
+    })
+    .filter((item): item is Product['colors'][number] => item !== null)
+
+  return parsed.length > 0 ? parsed : fallback
 }
 
 function ProductPage() {
@@ -70,17 +143,34 @@ function ProductPage() {
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [panel, setPanel] = useState<Product | 'add' | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [colorDraftName, setColorDraftName] = useState('')
+  const [colorDraftHex, setColorDraftHex] = useState('#dcc7a1')
   const [form, setForm] = useState<ProductFormState>({
     name: '',
     image: '',
+    gallery: '',
     category: '',
     originalPrice: '',
     discountPercent: '0',
     country: 'Vietnam',
-    rating: '4.0',
+    rating: '0',
     status: 'active',
     inStock: true,
+    description: '',
+    sizes: '',
+    colors: '',
+    sizeGuide: '',
   })
+
+  const pushToast = (type: ToastItem['type'], message: string) => {
+    const id = Date.now() + Math.floor(Math.random() * 1000)
+    setToasts((current) => [...current, { id, type, message }])
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id))
+    }, 2800)
+  }
 
   const filteredProducts = useMemo(
     () =>
@@ -95,28 +185,43 @@ function ProductPage() {
     [filterCategory, filterStatus, products, search],
   )
 
-  const previewCost = getComputedSalePrice(form.originalPrice, form.discountPercent)
+  const previewCost = getComputedSalePrice(
+    form.originalPrice,
+    normalizeDiscountPercent(form.discountPercent),
+  )
   const previewImage = form.image.trim()
+  const galleryImages = useMemo(() => splitLineSeparatedValues(form.gallery), [form.gallery])
+  const selectedColors = useMemo(() => parseColorLines(form.colors, []), [form.colors])
 
   const openAdd = () => {
+    setColorDraftName('')
+    setColorDraftHex('#dcc7a1')
     setForm({
       name: '',
       image: '',
+      gallery: '',
       category: categories[0]?.name ?? '',
       originalPrice: '',
       discountPercent: '0',
       country: 'Vietnam',
-      rating: '4.0',
+      rating: '0',
       status: 'active',
       inStock: true,
+      description: '',
+      sizes: '',
+      colors: '',
+      sizeGuide: '',
     })
     setPanel('add')
   }
 
   const openEdit = (product: Product) => {
+    setColorDraftName('')
+    setColorDraftHex(product.colors[0]?.hex ?? '#dcc7a1')
     setForm({
       name: product.name,
       image: product.image,
+      gallery: product.images.join('\n'),
       category: product.category,
       originalPrice: String(product.originalPrice ?? product.cost),
       discountPercent: getDiscountPercent(product),
@@ -124,6 +229,10 @@ function ProductPage() {
       rating: String(product.rating),
       status: product.status ?? 'active',
       inStock: product.inStock !== false,
+      description: product.description,
+      sizes: product.sizes.join(', '),
+      colors: stringifyColorLines(product.colors),
+      sizeGuide: product.sizeGuide,
     })
     setPanel(product)
   }
@@ -134,39 +243,137 @@ function ProductPage() {
       return
     }
 
-    const image = await readFileAsDataUrl(file)
-    if (!image) {
-      return
-    }
+    try {
+      const image = await readFileAsDataUrl(file)
+      if (!image) {
+        pushToast('error', 'Không đọc được ảnh sản phẩm.')
+        return
+      }
 
-    setForm((current) => ({ ...current, image }))
+      setForm((current) => ({ ...current, image }))
+      pushToast('success', 'Đã tải ảnh sản phẩm.')
+    } catch {
+      pushToast('error', 'Tải ảnh sản phẩm thất bại.')
+    }
     event.target.value = ''
   }
 
-  const handleSave = () => {
+  const handleGalleryUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? [])
+    if (files.length === 0) {
+      return
+    }
+
+    try {
+      const uploadedImages = (
+        await Promise.all(files.map((file) => readFileAsDataUrl(file)))
+      ).filter(Boolean)
+
+      if (uploadedImages.length === 0) {
+        pushToast('error', 'Không đọc được ảnh gallery.')
+        event.target.value = ''
+        return
+      }
+
+      setForm((current) => {
+        const nextGallery = [...splitLineSeparatedValues(current.gallery), ...uploadedImages]
+        return { ...current, gallery: nextGallery.join('\n') }
+      })
+      pushToast('success', `Đã thêm ${uploadedImages.length} ảnh gallery.`)
+    } catch {
+      pushToast('error', 'Tải ảnh gallery thất bại.')
+    }
+
+    event.target.value = ''
+  }
+
+  const removeGalleryImage = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      gallery: splitLineSeparatedValues(current.gallery)
+        .filter((_, imageIndex) => imageIndex !== index)
+        .join('\n'),
+    }))
+  }
+
+  const syncSelectedColors = (colors: Product['colors']) => {
+    setForm((current) => ({ ...current, colors: stringifyColorLines(colors) }))
+  }
+
+  const addColorSelection = (color: Product['colors'][number]) => {
+    const normalizedHex = color.hex.trim().toLowerCase()
+    const normalizedName = color.name.trim()
+    if (!normalizedName || !normalizedHex) {
+      pushToast('error', 'Màu sắc cần có tên và mã màu hợp lệ.')
+      return
+    }
+
+    const nextColors = selectedColors.some(
+      (item) =>
+        item.hex.toLowerCase() === normalizedHex || item.name.toLowerCase() === normalizedName.toLowerCase(),
+    )
+      ? selectedColors
+      : [...selectedColors, { name: normalizedName, hex: normalizedHex }]
+
+    syncSelectedColors(nextColors)
+  }
+
+  const removeSelectedColor = (hex: string) => {
+    syncSelectedColors(selectedColors.filter((color) => color.hex.toLowerCase() !== hex.toLowerCase()))
+  }
+
+  const handleAddCustomColor = () => {
+    addColorSelection({
+      name: colorDraftName.trim() || `Color ${selectedColors.length + 1}`,
+      hex: colorDraftHex,
+    })
+    setColorDraftName('')
+  }
+
+  const handleSave = async () => {
+    if (isSaving) {
+      return
+    }
+
     if (!form.name.trim() || !form.originalPrice || !form.category) {
+      pushToast('error', 'Vui lòng nhập tên sản phẩm, giá gốc và danh mục.')
       return
     }
 
     const basePrice = Number(form.originalPrice)
-    const discountPercent = Number(form.discountPercent || '0')
-    const cost = getComputedSalePrice(form.originalPrice, form.discountPercent)
+    const normalizedDiscountPercent = normalizeDiscountPercent(form.discountPercent)
+    const discountPercent = Number(normalizedDiscountPercent)
+    const cost = getComputedSalePrice(form.originalPrice, normalizedDiscountPercent)
 
-    if (!Number.isFinite(basePrice) || basePrice <= 0 || cost === null) {
+    if (!Number.isFinite(basePrice) || basePrice < 0 || cost === null) {
+      pushToast('error', 'Giá gốc hoặc phần trăm giảm giá không hợp lệ.')
       return
     }
 
     if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent >= 100) {
+      pushToast('error', 'Phần trăm giảm giá phải nằm trong khoảng từ 0 đến 99.')
       return
     }
 
-    const originalPrice = basePrice
-    const image = form.image.trim() || createProductImage(form.category)
+    setIsSaving(true)
 
+    const isAdding = panel === 'add'
+    const originalPrice = basePrice
+    const image = isAdding ? form.image.trim() : form.image.trim() || createProductImage(form.category)
+    const mockData = createProductMockData({
+      name: form.name.trim(),
+      image,
+      country: form.country,
+      category: form.category,
+      rating: Number(form.rating || '0'),
+    })
+    const gallery = splitLineSeparatedValues(form.gallery)
+    const sizes = splitCommaSeparatedLines(form.sizes)
     const baseProduct = {
       id: panel === 'add' ? createAdminProductId() : panel!.id,
       name: form.name.trim(),
       image,
+      images: gallery.length > 0 ? gallery : mockData.images,
       cost,
       originalPrice,
       description:
@@ -175,7 +382,7 @@ function ProductPage() {
           : panel!.description,
       country: form.country,
       category: form.category,
-      rating: Number(form.rating),
+      rating: Number(form.rating || '0'),
       status: form.status,
       inStock: form.inStock,
     }
@@ -191,17 +398,73 @@ function ProductPage() {
       }),
     }
 
-    if (panel === 'add') {
-      addProduct(nextProduct)
-    } else if (panel) {
-      updateProduct(nextProduct)
+    nextProduct.description =
+      form.description.trim() ||
+      (panel === 'add'
+        ? `Sản phẩm ${form.name.trim()} được thêm từ trang quản trị.`
+        : nextProduct.description)
+
+    if (gallery.length > 0) {
+      nextProduct.images = gallery
+    }
+    if (isAdding) {
+      nextProduct.description = form.description.trim()
     }
 
-    setPanel(null)
+    nextProduct.colors = parseColorLines(form.colors, nextProduct.colors)
+    nextProduct.sizes = sizes.length > 0 ? sizes : nextProduct.sizes
+    if (isAdding) {
+      nextProduct.colors = parseColorLines(form.colors, [])
+      nextProduct.sizes = sizes
+    }
+    nextProduct.tags = nextProduct.tags.map((tag) =>
+      tag.toLowerCase().includes('đánh giá') || tag.toLowerCase().includes('danh gia')
+        ? 'Đánh giá 0/5'
+        : tag,
+    )
+    nextProduct.sizeGuide = form.sizeGuide.trim() || nextProduct.sizeGuide
+    if (isAdding) {
+      nextProduct.sizeGuide = form.sizeGuide.trim()
+    }
+
+    try {
+      await new Promise((resolve) => window.setTimeout(resolve, 350))
+
+      if (panel === 'add') {
+        addProduct(nextProduct)
+        pushToast('success', 'Đã tạo sản phẩm mới.')
+      } else if (panel) {
+        updateProduct(nextProduct)
+        pushToast('success', 'Đã cập nhật sản phẩm.')
+      }
+
+      setPanel(null)
+    } catch {
+      pushToast('error', 'Không thể lưu sản phẩm. Vui lòng thử lại.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
     <div className="flex h-full overflow-hidden">
+      <div className="pointer-events-none fixed right-5 top-5 z-[70] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`rounded-[14px] border px-4 py-3 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.28)] backdrop-blur ${
+              toast.type === 'success'
+                ? 'border-emerald-500/30 bg-emerald-500/12 text-emerald-100'
+                : 'border-red-500/30 bg-red-500/12 text-red-100'
+            }`}
+          >
+            <div className="font-semibold">
+              {toast.type === 'success' ? 'Thành công' : 'Có lỗi xảy ra'}
+            </div>
+            <div className="mt-1 text-[13px] opacity-90">{toast.message}</div>
+          </div>
+        ))}
+      </div>
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AdminToolbar
           right={
@@ -274,7 +537,10 @@ function ProductPage() {
                   {filteredProducts.map((product) => {
                     const category = categories.find((item) => item.name === product.category)
                     const originalPrice = product.originalPrice ?? product.cost
-                    const discount = Math.round((1 - product.cost / originalPrice) * 100)
+                    const discount =
+                      originalPrice > 0
+                        ? Math.max(0, Math.round((1 - product.cost / originalPrice) * 100))
+                        : 0
 
                     return (
                       <tr
@@ -365,8 +631,15 @@ function ProductPage() {
       {panel ? (
         <AdminDrawer
           title={panel === 'add' ? 'Thêm sản phẩm' : 'Sửa sản phẩm'}
-          onClose={() => setPanel(null)}
-          onSave={handleSave}
+          onClose={() => {
+            if (!isSaving) {
+              setPanel(null)
+            }
+          }}
+          onSave={() => {
+            void handleSave()
+          }}
+          saveLabel={isSaving ? 'Đang lưu...' : 'Lưu'}
         >
           <AdminField label="Hình ảnh">
             <div className="space-y-3">
@@ -421,6 +694,131 @@ function ProductPage() {
             />
           </AdminField>
 
+          <AdminField label="Màu sắc">
+            <div className="space-y-4">
+              <div className="rounded-[16px] border border-[#3a3530] bg-[#14110f] p-3">
+                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7a7570]">
+                  Bảng chọn nhanh
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {colorPresets.map((color) => {
+                    const isActive = selectedColors.some(
+                      (item) => item.hex.toLowerCase() === color.hex.toLowerCase(),
+                    )
+
+                    return (
+                      <button
+                        key={`${color.name}-${color.hex}`}
+                        type="button"
+                        onClick={() => addColorSelection(color)}
+                        className={cn(
+                          'group flex flex-col items-center gap-2 rounded-[14px] border px-2 py-3 transition',
+                          isActive
+                            ? 'border-[#f4b321] bg-[#20170d]'
+                            : 'border-[#2d2822] bg-[#181411] hover:border-[#6f5430]',
+                        )}
+                      >
+                        <span
+                          className="h-8 w-8 rounded-full border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.14)]"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <span className="text-center text-[11px] leading-4 text-[#d5cec3]">
+                          {color.name}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-[16px] border border-[#3a3530] bg-[#14110f] p-3">
+                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7a7570]">
+                  Màu tùy chỉnh
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={colorDraftHex}
+                    onChange={(event) => setColorDraftHex(event.target.value)}
+                    className="h-11 w-14 cursor-pointer rounded-[12px] border border-[#3a3530] bg-transparent p-1"
+                    aria-label="Chọn mã màu"
+                  />
+                  <AdminInput
+                    value={colorDraftName}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                      setColorDraftName(event.target.value)
+                    }
+                    placeholder="Tên màu hiển thị"
+                    className="flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomColor}
+                    className="rounded-[12px] border border-[#7a5623] bg-[#1d140c] px-4 py-2.5 text-sm font-semibold text-[#f0ece6] transition hover:border-[#f7931a] hover:text-white"
+                  >
+                    Thêm
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[16px] border border-[#3a3530] bg-[#14110f] p-3">
+                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7a7570]">
+                  Đã chọn
+                </div>
+                {selectedColors.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedColors.map((color) => (
+                      <div
+                        key={`${color.name}-${color.hex}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#3a3530] bg-[#111] px-3 py-2 text-sm text-[#f0ece6]"
+                      >
+                        <span
+                          className="h-3.5 w-3.5 rounded-full border border-white/10"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <span>{color.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeSelectedColor(color.hex)}
+                          className="text-[#7a7570] transition hover:text-white"
+                          aria-label={`Xóa màu ${color.name}`}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-[12px] border border-dashed border-[#2d2822] px-3 py-3 text-sm text-[#7a7570]">
+                    Chọn màu từ bảng phía trên để hiện ở đây.
+                  </div>
+                )}
+              </div>
+
+              <AdminInput
+                as="textarea"
+                value={form.colors}
+                onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                  setForm((current) => ({ ...current, colors: event.target.value }))
+                }
+                placeholder={"Mỗi dòng: Tên màu|#HEX\nKem vani|#dcc7a1"}
+                className="hidden"
+              />
+            </div>
+          </AdminField>
+
+          <AdminField label="Mô tả ngắn">
+            <AdminInput
+              as="textarea"
+              value={form.description}
+              onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                setForm((current) => ({ ...current, description: event.target.value }))
+              }
+              placeholder="Mô tả chất liệu, form dáng, cảm giác mặc..."
+              className="min-h-[96px]"
+            />
+          </AdminField>
+
           <AdminField label="Danh mục">
             <AdminInput
               as="select"
@@ -458,6 +856,12 @@ function ProductPage() {
                 value={form.discountPercent}
                 onChange={(event: ChangeEvent<HTMLInputElement>) =>
                   setForm((current) => ({ ...current, discountPercent: event.target.value }))
+                }
+                onBlur={() =>
+                  setForm((current) => ({
+                    ...current,
+                    discountPercent: normalizeDiscountPercent(current.discountPercent),
+                  }))
                 }
                 placeholder="0"
               />
@@ -509,6 +913,76 @@ function ProductPage() {
             </AdminField>
           </div>
 
+          <AdminField label="Gallery ảnh">
+            <div className="space-y-3">
+              {galleryImages.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {galleryImages.map((image, index) => (
+                    <div
+                      key={`${index}-${image.slice(0, 32)}`}
+                      className="group relative overflow-hidden rounded-[14px] border border-[#3a3530] bg-[#111]"
+                    >
+                      <div className="aspect-square w-full">
+                        <img
+                          src={image}
+                          alt={`Gallery ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        className="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
+                        aria-label={`Xóa ảnh gallery ${index + 1}`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-dashed border-[#7a5623] bg-[#1b140d] px-4 py-3 text-sm font-medium text-[#f0ece6] transition hover:border-[#f7931a]">
+                <Upload size={15} />
+                Thêm ảnh gallery
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleGalleryUpload}
+                />
+              </label>
+            </div>
+          </AdminField>
+
+          <div className="grid grid-cols-2 gap-3">
+            <AdminField label="Sizes">
+              <AdminInput
+                as="textarea"
+                value={form.sizes}
+                onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                  setForm((current) => ({ ...current, sizes: event.target.value }))
+                }
+                placeholder="S, M, L, XL"
+                className="min-h-[88px]"
+              />
+            </AdminField>
+          </div>
+
+
+          <AdminField label="Hướng dẫn chọn size">
+            <AdminInput
+              as="textarea"
+              value={form.sizeGuide}
+              onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                setForm((current) => ({ ...current, sizeGuide: event.target.value }))
+              }
+              placeholder="Gợi ý chọn size cho khách."
+              className="min-h-[88px]"
+            />
+          </AdminField>
+
           <AdminField label="Tồn kho">
             <div className="flex gap-6 pt-1">
               {[true, false].map((value) => (
@@ -542,3 +1016,4 @@ function ProductPage() {
 }
 
 export default ProductPage
+
