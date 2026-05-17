@@ -5,6 +5,7 @@ import CategoryPage from '../pages/admin/CategoryPage';
 import AdminProductPage from '../pages/admin/ProductPage';
 import SettingsPage from '../pages/admin/SettingsPage';
 import CartPage from '../pages/user/CartPage';
+import CheckoutPage from '../pages/user/CheckoutPage';
 import ProductPage from '../pages/user/ProductPage';
 import ProductDetailPage from '../pages/user/ProductDetailPage';
 import SavedPage from '../pages/user/SavedPage';
@@ -26,6 +27,10 @@ const AppRouter = createBrowserRouter([
             {
                 path: 'cart',
                 element: <CartPage />
+            },
+            {
+                path: 'checkout',
+                element: <CheckoutPage />
             },
             {
                 path: 'saved',

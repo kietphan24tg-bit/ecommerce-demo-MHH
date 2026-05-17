@@ -438,13 +438,22 @@ function CartPage() {
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    disabled={isCartEmpty}
-                    className="mt-7 inline-flex h-[58px] w-full items-center justify-center rounded-[16px] bg-[linear-gradient(90deg,#ff5b05_0%,#ff9f1c_100%)] px-6 text-[0.98rem] font-extrabold uppercase tracking-[0.04em] text-white shadow-[0_16px_32px_rgba(255,133,20,0.28)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100"
-                  >
-                    TIẾN HÀNH THANH TOÁN →
-                  </button>
+                  {isCartEmpty ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="mt-7 inline-flex h-[58px] w-full items-center justify-center rounded-[16px] bg-[linear-gradient(90deg,#ff5b05_0%,#ff9f1c_100%)] px-6 text-[0.98rem] font-extrabold uppercase tracking-[0.04em] text-white shadow-[0_16px_32px_rgba(255,133,20,0.28)] opacity-45"
+                    >
+                      TIẾN HÀNH THANH TOÁN →
+                    </button>
+                  ) : (
+                    <Link
+                      to="/checkout"
+                      className="mt-7 inline-flex h-[58px] w-full items-center justify-center rounded-[16px] bg-[linear-gradient(90deg,#ff5b05_0%,#ff9f1c_100%)] px-6 text-[0.98rem] font-extrabold uppercase tracking-[0.04em] text-white shadow-[0_16px_32px_rgba(255,133,20,0.28)] transition hover:brightness-105"
+                    >
+                      TIẾN HÀNH THANH TOÁN →
+                    </Link>
+                  )}
 
                   <div className="mt-4 flex items-center justify-center gap-2 text-[0.86rem] text-[#756b61]">
                     <LockKeyhole className="h-4 w-4" />
