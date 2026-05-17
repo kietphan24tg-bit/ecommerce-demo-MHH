@@ -8,6 +8,18 @@ export type ProductBenefit = {
   description: string
 }
 
+export type ProductReview = {
+  id: string
+  author: string
+  rating: number
+  color: string
+  size: string
+  comment: string
+  createdAt: string
+  helpfulCount: number
+  verifiedPurchase?: boolean
+}
+
 export type Product = {
   id: string
   name: string
@@ -24,6 +36,7 @@ export type Product = {
   colors: ProductColor[]
   sizes: string[]
   benefits: ProductBenefit[]
+  reviews: ProductReview[]
   tags: string[]
   sizeGuide: string
 }
