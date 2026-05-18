@@ -128,13 +128,13 @@ export function MarketShell({ area }: MarketShellProps) {
             <div className="flex items-center gap-2">
               <IconBadgeLink to="/saved" label="Đã lưu" count={savedCount} icon={Heart} />
               <IconBadgeLink to="/cart" label="Giỏ hàng" count={cartCount} icon={ShoppingCart} />
-              <button
-                type="button"
+              <Link
+                to="/login"
                 aria-label="Tài khoản"
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-[#3a2e1d] bg-[#18120d] text-[#d8c9ae] transition hover:border-[#8b6f38] hover:text-[#f4ab22]"
               >
                 <UserRound className="h-4.5 w-4.5" />
-              </button>
+              </Link>
             </div>
           ) : (
             <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-4 py-2 font-sans text-sm font-semibold text-emerald-300">

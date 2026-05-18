@@ -4,6 +4,7 @@ import DashboardPage from '../pages/admin/DashboardPage';
 import CategoryPage from '../pages/admin/CategoryPage';
 import AdminProductPage from '../pages/admin/ProductPage';
 import SettingsPage from '../pages/admin/SettingsPage';
+import LoginPage from '../pages/auth/LoginPage';
 import CartPage from '../pages/user/CartPage';
 import CheckoutPage from '../pages/user/CheckoutPage';
 import ProductPage from '../pages/user/ProductPage';
@@ -12,6 +13,10 @@ import SavedPage from '../pages/user/SavedPage';
 import { createBrowserRouter } from 'react-router-dom';
 
 const AppRouter = createBrowserRouter([
+    {
+        path: '/login',
+        element: <LoginPage />
+    },
     {
         path: '/',
         element: <UserLayout />,
