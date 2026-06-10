@@ -1,19 +1,20 @@
 import type { ReactNode } from 'react'
 import {
-  BanknoteArrowDown,
+  Banknote,
   Check,
   ChevronLeft,
   Circle,
   CreditCard,
-  Heart,
+  Landmark,
   LockKeyhole,
   MapPinHouse,
+  Package,
   ShieldCheck,
-  ShoppingBag,
-  Store,
+  Smartphone,
   Tag,
   Truck,
   WalletCards,
+  Zap,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -45,7 +46,7 @@ const shippingMethods = [
     title: 'Nhanh',
     description: 'Giao trong 1 - 2 ngày làm việc',
     note: 'Phù hợp khi cần nhận sớm',
-    icon: ShoppingBag,
+    icon: Package,
     fee: 50000,
   },
   {
@@ -53,7 +54,7 @@ const shippingMethods = [
     title: 'Hỏa tốc',
     description: 'Giao trong ngày trước 22:00',
     note: 'Chỉ áp dụng nội thành HCM và Hà Nội',
-    icon: BanknoteArrowDown,
+    icon: Zap,
     fee: 80000,
   },
 ] as const
@@ -63,13 +64,13 @@ const paymentMethods = [
     id: 'cod',
     title: 'Thanh toán khi nhận hàng',
     description: 'Trả tiền mặt khi shipper giao',
-    icon: WalletCards,
+    icon: Banknote,
   },
   {
     id: 'bank',
     title: 'Chuyển khoản ngân hàng',
     description: 'Chuyển khoản rồi upload bill',
-    icon: Store,
+    icon: Landmark,
   },
   {
     id: 'card',
@@ -81,7 +82,7 @@ const paymentMethods = [
     id: 'momo',
     title: 'Ví MoMo',
     description: 'Quét QR hoặc nhập số điện thoại',
-    icon: Heart,
+    icon: Smartphone,
   },
 ] as const
 
