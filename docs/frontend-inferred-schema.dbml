@@ -1,0 +1,265 @@
+Project ecommerce_frontend_inferred_schema {
+  database_type: "PostgreSQL"
+  Note: '''
+  Schema nay duoc suy ra tu frontend trong `fe/ecommerce`.
+  Co 2 nhom:
+  1. Core tables: frontend dang su dung truc tiep qua type/store/mock data.
+  2. Checkout tables: suy ra tu flow checkout, chua thay state persist/API that su.
+  '''
+}
+
+Enum active_status {
+  active
+  inactive
+}
+
+Enum shipping_method_code {
+  standard
+  express
+  priority
+}
+
+Enum payment_method_code {
+  cod
+  bank
+  card
+  momo
+}
+
+Table categories {
+  id varchar [pk, note: 'UI dung slug-like id, vd: ao, quan, giay']
+  name varchar [not null, unique]
+  slug varchar [not null, unique]
+  description text [not null, note: 'frontend field desc']
+  color varchar [not null, note: 'hex color']
+  status active_status [not null, default: 'active']
+
+  Note: 'Chac chan ton tai trong frontend admin va duoc gan cho product qua category name.'
+}
+
+Table products {
+  id varchar [pk]
+  category_id varchar [not null, ref: > categories.id]
+  name varchar [not null]
+  image varchar [not null, note: 'hero image']
+  description text [not null]
+  country varchar [not null]
+  cost decimal(12,2) [not null]
+  original_price decimal(12,2)
+  rating int [not null, note: '1..5']
+  status active_status [not null, default: 'active']
+  in_stock boolean [not null, default: true]
+  size_guide text
+
+  Indexes {
+    category_id
+    country
+    rating
+    status
+  }
+
+  Note: 'Frontend dang dung category string; DB nen chuyen sang FK category_id.'
+}
+
+Table product_images {
+  id varchar [pk]
+  product_id varchar [not null, ref: > products.id]
+  image_url varchar [not null]
+  sort_order int [not null, default: 0]
+  kind varchar [note: 'main, studio, detail']
+
+  Indexes {
+    (product_id, sort_order) [unique]
+  }
+}
+
+Table product_colors {
+  id varchar [pk]
+  product_id varchar [not null, ref: > products.id]
+  name varchar [not null]
+  hex varchar [not null]
+  sort_order int [not null, default: 0]
+
+  Indexes {
+    (product_id, name) [unique]
+  }
+}
+
+Table product_sizes {
+  id varchar [pk]
+  product_id varchar [not null, ref: > products.id]
+  size_value varchar [not null]
+  sort_order int [not null, default: 0]
+
+  Indexes {
+    (product_id, size_value) [unique]
+  }
+}
+
+Table product_benefits {
+  id varchar [pk]
+  product_id varchar [not null, ref: > products.id]
+  title varchar [not null]
+  description text [not null]
+  sort_order int [not null, default: 0]
+}
+
+Table product_tags {
+  id varchar [pk]
+  product_id varchar [not null, ref: > products.id]
+  tag varchar [not null]
+
+  Indexes {
+    (product_id, tag) [unique]
+  }
+}
+
+Table product_reviews {
+  id varchar [pk]
+  product_id varchar [not null, ref: > products.id]
+  author varchar [not null]
+  rating int [not null, note: '1..5']
+  color_name varchar [not null, note: 'frontend luu text, chua FK']
+  size_value varchar [not null, note: 'frontend luu text, chua FK']
+  comment text [not null]
+  created_at timestamp [not null]
+  helpful_count int [not null, default: 0]
+  verified_purchase boolean [not null, default: false]
+
+  Indexes {
+    product_id
+    created_at
+    rating
+  }
+}
+
+Table cart_items {
+  id varchar [pk]
+  product_id varchar [ref: > products.id]
+  category_id varchar [ref: > categories.id, note: 'co the suy ra tu product, frontend dang duplicate']
+  name_snapshot varchar [not null]
+  image_snapshot varchar [not null]
+  unit_price decimal(12,2) [not null]
+  quantity int [not null, default: 1]
+  color_name varchar [not null]
+  color_hex varchar [not null]
+  size_value varchar [not null]
+  saved boolean [not null, default: false]
+
+  Note: 'Frontend chua co user; thuc te DB nen them user_id hoac session_id.'
+}
+
+Table saved_items {
+  id varchar [pk]
+  product_id varchar [not null, ref: > products.id]
+  category_id varchar [ref: > categories.id]
+  name_snapshot varchar [not null]
+  image_snapshot varchar [not null]
+  price_snapshot decimal(12,2) [not null]
+  original_price_snapshot decimal(12,2)
+  rating_snapshot int [not null]
+  review_count int [not null, default: 0]
+  country_snapshot varchar [not null]
+  saved_at_label varchar [not null, note: 'frontend hien dang luu text hien thi, nen doi thanh saved_at']
+  accent_tag varchar
+  in_stock boolean [not null, default: true]
+  size_value varchar [not null]
+
+  Note: 'Frontend luu nhieu mau trong 1 saved item; tach bang saved_item_colors de chuan hoa.'
+}
+
+Table saved_item_colors {
+  id varchar [pk]
+  saved_item_id varchar [not null, ref: > saved_items.id]
+  name varchar [not null]
+  hex varchar [not null]
+  sort_order int [not null, default: 0]
+}
+
+Table users {
+  id varchar [pk]
+  full_name varchar [not null]
+  phone varchar
+  email varchar [unique]
+
+  Note: 'Khong thay tren frontend hien tai, nhung can cho cart/saved/order neu backend that su.'
+}
+
+Table addresses {
+  id varchar [pk]
+  user_id varchar [ref: > users.id]
+  recipient_name varchar [not null]
+  phone varchar [not null]
+  email varchar
+  city varchar [not null]
+  district varchar [not null]
+  ward varchar [not null]
+  street_address varchar [not null]
+  is_default boolean [not null, default: false]
+
+  Note: 'Suy ra tu CheckoutPage.'
+}
+
+Table shipping_methods {
+  id varchar [pk]
+  code shipping_method_code [not null, unique]
+  title varchar [not null]
+  description text
+  note text
+  fee decimal(12,2) [not null, default: 0]
+
+  Note: 'Suy ra tu shippingMethods trong CheckoutPage.'
+}
+
+Table payment_methods {
+  id varchar [pk]
+  code payment_method_code [not null, unique]
+  title varchar [not null]
+  description text
+
+  Note: 'Suy ra tu paymentMethods trong CheckoutPage.'
+}
+
+Table promo_codes {
+  id varchar [pk]
+  code varchar [not null, unique]
+  description text
+  discount_type varchar [not null, note: 'percent | fixed']
+  discount_value decimal(12,2) [not null]
+  is_active boolean [not null, default: true]
+
+  Note: 'Checkout va cart co o nhap ma giam gia, chua thay rule that su.'
+}
+
+Table orders {
+  id varchar [pk]
+  user_id varchar [ref: > users.id]
+  address_id varchar [ref: > addresses.id]
+  shipping_method_id varchar [ref: > shipping_methods.id]
+  payment_method_id varchar [ref: > payment_methods.id]
+  promo_code_id varchar [ref: > promo_codes.id]
+  subtotal decimal(12,2) [not null]
+  shipping_fee decimal(12,2) [not null, default: 0]
+  discount_amount decimal(12,2) [not null, default: 0]
+  total_amount decimal(12,2) [not null]
+  note text
+  status varchar [not null, default: 'pending']
+  created_at timestamp [not null]
+
+  Note: 'Bang order duoc suy ra tu CheckoutPage, hien chua co state/order API o frontend.'
+}
+
+Table order_items {
+  id varchar [pk]
+  order_id varchar [not null, ref: > orders.id]
+  product_id varchar [ref: > products.id]
+  category_id varchar [ref: > categories.id]
+  name_snapshot varchar [not null]
+  image_snapshot varchar [not null]
+  unit_price decimal(12,2) [not null]
+  quantity int [not null]
+  color_name varchar [not null]
+  color_hex varchar [not null]
+  size_value varchar [not null]
+  line_total decimal(12,2) [not null]
+}
