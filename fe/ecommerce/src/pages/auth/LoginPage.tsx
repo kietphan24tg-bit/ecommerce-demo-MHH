@@ -171,15 +171,19 @@ function LoginPage() {
                 </label>
                 <div className="relative">
                   {signInMode === 'email' ? (
-                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7e7266]" />
+                    <div className="pointer-events-none absolute top-2 bottom-2 left-2 z-10 flex w-10 items-center justify-center rounded-[14px] border border-[#332718] bg-[#16110c] text-[#b59669] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                      <Mail className="h-4.5 w-4.5" />
+                    </div>
                   ) : (
-                    <Smartphone className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7e7266]" />
+                    <div className="pointer-events-none absolute top-2 bottom-2 left-2 z-10 flex w-10 items-center justify-center rounded-[14px] border border-[#332718] bg-[#16110c] text-[#b59669] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                      <Smartphone className="h-4.5 w-4.5" />
+                    </div>
                   )}
                   <Input
                     id="email"
                     type={signInMode === 'email' ? 'email' : 'tel'}
                     placeholder={signInMode === 'email' ? 'ten@email.com' : 'Nhập số điện thoại'}
-                    className="h-14 rounded-2xl border-[#3b3126] bg-[#0f0f10] pl-12 pr-4 text-[1.05rem] text-[#edf3fb] placeholder:text-[#728199] focus:border-[#8b6f38] focus:bg-[#121214]"
+                    className="h-14 rounded-2xl border-[#3b3126] bg-[#0f0f10] pl-20 pr-4 text-[1.05rem] text-[#edf3fb] placeholder:text-[#728199] focus:border-[#8b6f38] focus:bg-[#121214]"
                   />
                 </div>
               </div>
@@ -189,19 +193,21 @@ function LoginPage() {
                   Mật khẩu <span className="text-[#ff7a59]">*</span>
                 </label>
                 <div className="relative">
-                  <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7e7266]" />
+                  <div className="pointer-events-none absolute top-2 bottom-2 left-2 z-10 flex w-10 items-center justify-center rounded-[14px] border border-[#332718] bg-[#16110c] text-[#b59669] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <LockKeyhole className="h-4.5 w-4.5" />
+                  </div>
                   <Input
                     id="password"
                     type="password"
                     placeholder="Nhập mật khẩu"
-                    className="h-14 rounded-2xl border-[#3b3126] bg-[#0f0f10] pl-12 pr-12 text-[1.05rem] text-[#edf3fb] placeholder:text-[#728199] focus:border-[#8b6f38] focus:bg-[#121214]"
+                    className="h-14 rounded-2xl border-[#3b3126] bg-[#0f0f10] pl-20 pr-20 text-[1.05rem] text-[#edf3fb] placeholder:text-[#728199] focus:border-[#8b6f38] focus:bg-[#121214]"
                   />
                   <button
                     type="button"
                     aria-label="Hiển thị mật khẩu"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7e7266] transition hover:text-[#f4ead4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffad29]"
+                    className="absolute top-2 right-2 z-10 flex h-10 w-10 items-center justify-center rounded-[14px] border border-[#332718] bg-[#16110c] text-[#b59669] transition hover:text-[#f4ead4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffad29]"
                   >
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4.5 w-4.5" />
                   </button>
                 </div>
               </div>
@@ -215,7 +221,7 @@ function LoginPage() {
                   <span>Ghi nhớ đăng nhập</span>
                 </label>
                 <Link
-                  to="/"
+                  to="/forgot-password"
                   className="font-semibold text-[#ff991b] transition hover:text-[#ffb347] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffad29]"
                 >
                   Quên mật khẩu?
@@ -257,7 +263,7 @@ function LoginPage() {
             <p className="mt-10 text-center text-lg text-[#8e7d69]">
               Chưa có tài khoản?{' '}
               <Link
-                to="/"
+                to="/register"
                 className="font-semibold text-[#ff991b] transition hover:text-[#ffb347] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffad29]"
               >
                 Đăng ký ngay

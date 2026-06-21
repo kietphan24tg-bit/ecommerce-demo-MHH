@@ -4,7 +4,9 @@ import DashboardPage from '../pages/admin/DashboardPage';
 import CategoryPage from '../pages/admin/CategoryPage';
 import AdminProductPage from '../pages/admin/ProductPage';
 import SettingsPage from '../pages/admin/SettingsPage';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 import LoginPage from '../pages/auth/LoginPage';
+import RegisterPage from '../pages/auth/RegisterPage';
 import CartPage from '../pages/user/CartPage';
 import CheckoutPage from '../pages/user/CheckoutPage';
 import ProductPage from '../pages/user/ProductPage';
@@ -16,6 +18,14 @@ const AppRouter = createBrowserRouter([
     {
         path: '/login',
         element: <LoginPage />
+    },
+    {
+        path: '/register',
+        element: <RegisterPage />
+    },
+    {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />
     },
     {
         path: '/',
