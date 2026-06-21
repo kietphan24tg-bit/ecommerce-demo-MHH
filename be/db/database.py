@@ -1,13 +1,20 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from core.config import settings
+from core.config import get_settings
+from db.base import Base
 
+settings = get_settings()
 engine = create_engine(
-    settings.DATABASE_URL
+    settings.database_url,
+    # Validate pooled connections before using them. This helps with
+    # managed Postgres providers that may close idle SSL connections.
+    pool_pre_ping=True,
+    # Recycle connections periodically to reduce stale pooled sessions.
+    pool_recycle=300,
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+
+
 def get_db():
     db = SessionLocal()
     try:
