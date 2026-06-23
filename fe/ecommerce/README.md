@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# Ecommerce Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React frontend workspace for the ecommerce project.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Zustand
+- React Hook Form
+- Zod
 
-## React Compiler
+## Current Scope
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The codebase already includes page and route structure for:
 
-## Expanding the ESLint configuration
+- User flows: product listing, product detail, cart, checkout, saved items
+- Auth flows: login, register, forgot password
+- Admin flows: dashboard, category management, product management, settings
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Current Status
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+The route/page structure is in place, but the app entry is still partially based on the default Vite starter. More integration work is needed before the frontend reflects the full ecommerce experience end to end.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Available Scripts
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
+pnpm dev
+pnpm build
+pnpm lint
+pnpm preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development Server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Runs on `http://127.0.0.1:5173` by default.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Main Folders
+
+```text
+src/
+|-- components/
+|-- layouts/
+|-- pages/
+|-- routes/
+|-- services/
+|-- store/
+`-- types/
 ```
+
+## Routes
+
+Defined in `src/routes/AppRouter.tsx`:
+
+- `/login`
+- `/register`
+- `/forgot-password`
+- `/`
+- `/products/:id`
+- `/cart`
+- `/checkout`
+- `/saved`
+- `/admin`
+- `/admin/category`
+- `/admin/product`
+- `/admin/settings`
+
+## Notes
+
+See the project-level README at [../../README.md](../../README.md) for the full monorepo overview.
