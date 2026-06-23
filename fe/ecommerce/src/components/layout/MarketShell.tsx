@@ -94,7 +94,7 @@ export function MarketShell({ area }: MarketShellProps) {
   }, [initializeCountryOptions])
 
   return (
-    <div className="min-h-screen bg-[#0b0907] text-[#f4ead4]">
+    <div className={`min-h-screen bg-[#0b0907] text-[#f4ead4] ${area === 'user' ? 'pb-[64px] sm:pb-0' : ''}`}>
       <header className="sticky top-0 z-40 border-b border-[#2a2114] bg-[#15110d]/96 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 py-3 sm:px-6 lg:px-8">
           <BrandLockup />
@@ -125,7 +125,7 @@ export function MarketShell({ area }: MarketShellProps) {
           )}
 
           {area === 'user' ? (
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 sm:flex">
               <IconBadgeLink to="/saved" label="Đã lưu" count={savedCount} icon={Heart} />
               <IconBadgeLink to="/cart" label="Giỏ hàng" count={cartCount} icon={ShoppingCart} />
               <Link
@@ -147,6 +147,65 @@ export function MarketShell({ area }: MarketShellProps) {
       <main className="mx-auto max-w-[1440px] px-0">
         <Outlet />
       </main>
+
+      {area === 'user' ? (
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-[#2a2114] bg-[#0f0c09]/96 backdrop-blur-xl sm:hidden">
+          <NavLink
+            to="/"
+            end
+            aria-label="Trang chủ"
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 px-4 text-[0.6rem] font-semibold uppercase tracking-widest transition ${isActive ? 'text-[#f4ab22]' : 'text-[#7a6f60]'}`
+            }
+          >
+            <LayoutDashboard className="h-5 w-5" />
+            Trang chủ
+          </NavLink>
+
+          <NavLink
+            to="/saved"
+            aria-label="Đã lưu"
+            className={({ isActive }) =>
+              `relative flex flex-col items-center gap-1 px-4 text-[0.6rem] font-semibold uppercase tracking-widest transition ${isActive ? 'text-[#f4ab22]' : 'text-[#7a6f60]'}`
+            }
+          >
+            {savedCount > 0 ? (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f4ab22] px-1 text-[0.58rem] font-black text-[#17120d]">
+                {savedCount}
+              </span>
+            ) : null}
+            <Heart className="h-5 w-5" />
+            Đã lưu
+          </NavLink>
+
+          <NavLink
+            to="/cart"
+            aria-label="Giỏ hàng"
+            className={({ isActive }) =>
+              `relative flex flex-col items-center gap-1 px-4 text-[0.6rem] font-semibold uppercase tracking-widest transition ${isActive ? 'text-[#f4ab22]' : 'text-[#7a6f60]'}`
+            }
+          >
+            {cartCount > 0 ? (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f4ab22] px-1 text-[0.58rem] font-black text-[#17120d]">
+                {cartCount}
+              </span>
+            ) : null}
+            <ShoppingCart className="h-5 w-5" />
+            Giỏ hàng
+          </NavLink>
+
+          <NavLink
+            to="/login"
+            aria-label="Tài khoản"
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 px-4 text-[0.6rem] font-semibold uppercase tracking-widest transition ${isActive ? 'text-[#f4ab22]' : 'text-[#7a6f60]'}`
+            }
+          >
+            <UserRound className="h-5 w-5" />
+            Tài khoản
+          </NavLink>
+        </nav>
+      ) : null}
     </div>
   )
 }

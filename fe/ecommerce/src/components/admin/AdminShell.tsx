@@ -49,7 +49,7 @@ export function AdminShell() {
   const location = useLocation()
   const products = useMarketStore((state) => state.products)
   const categories = useMarketStore((state) => state.categories)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768)
 
   const counts = useMemo(
     () => ({
@@ -64,7 +64,14 @@ export function AdminShell() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#0e0c0a] text-[#f0ece6]">
       {sidebarOpen ? (
-        <aside className="flex h-full w-[270px] shrink-0 flex-col overflow-hidden border-r border-[#2e2a24] bg-[#111009]">
+        <div
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      ) : null}
+
+      {sidebarOpen ? (
+        <aside className="fixed inset-y-0 left-0 z-40 flex h-screen w-[270px] shrink-0 flex-col overflow-hidden border-r border-[#2e2a24] bg-[#111009] md:relative md:inset-y-auto md:left-auto md:z-auto md:h-full">
           <div className="flex items-center gap-3 border-b border-[#2e2a24] px-5 py-[19px]">
             <div className="flex h-[46px] w-[46px] items-center justify-center rounded-xl bg-[#f7931a] font-display text-2xl font-bold text-white">
               E

@@ -18,6 +18,7 @@ def build_error_response(
     code: str,
     message: str,
     details=None,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
@@ -33,24 +34,49 @@ def build_error_response(
             "path": request.url.path,
             "requestId": getattr(request.state, "request_id", None),
         },
+        headers=headers or {},
     )
 
 
 async def app_exception_handler(request: Request, exc: AppException):
-    logger.warning(
-        "event=app_exception request_id=%s method=%s path=%s status_code=%s error_code=%s",
-        getattr(request.state, "request_id", None),
-        request.method,
-        request.url.path,
-        exc.status_code,
-        exc.code,
-    )
+    key_type = None
+    if exc.status_code == 429 and isinstance(exc.details, dict):
+        key_type = exc.details.get("key_type")
+
+    if key_type:
+        logger.warning(
+            "event=app_exception request_id=%s method=%s path=%s status_code=%s error_code=%s key_type=%s",
+            getattr(request.state, "request_id", None),
+            request.method,
+            request.url.path,
+            exc.status_code,
+            exc.code,
+            key_type,
+        )
+    else:
+        logger.warning(
+            "event=app_exception request_id=%s method=%s path=%s status_code=%s error_code=%s",
+            getattr(request.state, "request_id", None),
+            request.method,
+            request.url.path,
+            exc.status_code,
+            exc.code,
+        )
+
+    headers: dict[str, str] = {}
+    if exc.status_code == 429:
+        retry_after = 60
+        if isinstance(exc.details, dict):
+            retry_after = exc.details.get("retry_after_seconds", retry_after)
+        headers["Retry-After"] = str(max(int(retry_after), 1))
+
     return build_error_response(
         request=request,
         status_code=exc.status_code,
         code=exc.code,
         message=exc.message,
         details=exc.details,
+        headers=headers,
     )
 
 
@@ -118,3 +144,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         message="Validation failed",
         details=format_validation_details(exc),
     )
+

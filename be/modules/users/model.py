@@ -26,9 +26,9 @@ class User(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     full_name: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
-    phone: Mapped[str] = mapped_column(nullable=False)
+    phone: Mapped[str | None] = mapped_column(nullable=True)
     role: Mapped[str] = mapped_column(nullable=False, default=DEFAULT_ROLE)
-    password_hash: Mapped[str] = mapped_column(nullable=False)
+    password_hash: Mapped[str | None] = mapped_column(nullable=True)
 
     sessions: Mapped[list["Session"]] = relationship(
         back_populates="user",

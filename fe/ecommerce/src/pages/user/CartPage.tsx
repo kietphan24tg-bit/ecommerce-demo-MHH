@@ -321,7 +321,7 @@ function CartPage() {
           <p className="pb-1 text-[0.94rem] text-[#8d8276]">{itemCount} sản phẩm</p>
         </div>
 
-        <div className="mt-9 flex flex-col gap-6 xl:flex-row xl:items-start">
+        <div className="mt-9 flex flex-col gap-6 lg:flex-row lg:items-start">
           <div className="min-w-0 flex-1 xl:max-w-[930px]">
             {isCartEmpty ? (
               <CartEmptyState />
@@ -410,7 +410,7 @@ function CartPage() {
             </div>
           </div>
 
-          <aside className="w-full shrink-0 space-y-5 xl:sticky xl:top-[96px]" style={{ maxWidth: 410 }}>
+          <aside className="w-full shrink-0 space-y-5 lg:w-[410px] lg:sticky lg:top-[96px]">
             <div className="overflow-hidden rounded-[28px] border border-[#342a1f] bg-[#1d1712] shadow-[0_18px_32px_rgba(0,0,0,0.16)]">
               <div className="border-b border-[#31261b] px-6 py-6">
                 <h2 className="text-[1.04rem] font-bold text-[#f4efe6]">Tóm tắt đơn hàng</h2>

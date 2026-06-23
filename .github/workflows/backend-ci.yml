@@ -1,0 +1,43 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "be/**"
+      - ".github/workflows/backend-ci.yml"
+      - ".github/workflows/backend-publish.yml"
+  push:
+    branches: [main]
+    paths:
+      - "be/**"
+      - ".github/workflows/backend-ci.yml"
+      - ".github/workflows/backend-publish.yml"
+
+defaults:
+  run:
+    working-directory: be
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen --group dev
+
+      - name: Run unit and API tests
+        run: uv run pytest -m "unit or api"

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from datetime import datetime, UTC
 
 from sqlalchemy.orm import Session
 
 from modules.auth.security import create_refresh_token
+from modules.auth.models.user_provider import UserProvider
 from modules.users.model import User
 from modules.auth.models.session import Session as UserSession
 
@@ -20,8 +23,8 @@ def create_user(
     *,
     full_name: str,
     email: str,
-    phone: str,
-    password_hash: str,
+    phone: str | None,
+    password_hash: str | None,
     role: str = User.DEFAULT_ROLE,
 ) -> User:
     user = User(
@@ -35,6 +38,40 @@ def create_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+def get_user_provider(
+    db: Session,
+    *,
+    provider_name: str,
+    provider_user_id: str,
+) -> UserProvider | None:
+    return (
+        db.query(UserProvider)
+        .filter(
+            UserProvider.provider_name == provider_name,
+            UserProvider.provider_user_id == provider_user_id,
+        )
+        .first()
+    )
+
+
+def create_user_provider(
+    db: Session,
+    *,
+    user_id: int,
+    provider_name: str,
+    provider_user_id: str,
+) -> UserProvider:
+    user_provider = UserProvider(
+        user_id=user_id,
+        provider_name=provider_name,
+        provider_user_id=provider_user_id,
+    )
+    db.add(user_provider)
+    db.commit()
+    db.refresh(user_provider)
+    return user_provider
 
 def create_session(
     db: Session,

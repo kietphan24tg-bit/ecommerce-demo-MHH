@@ -323,7 +323,7 @@ function CheckoutPage() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_440px]">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_440px]">
           <div className="space-y-6">
             <SectionCard step={1} title="Thông tin người nhận">
               <div className="grid gap-5 md:grid-cols-2">
@@ -482,7 +482,7 @@ function CheckoutPage() {
             </div>
           </div>
 
-          <aside className="space-y-5 xl:sticky xl:top-[96px] xl:self-start">
+          <aside className="space-y-5 lg:sticky lg:top-[96px] lg:self-start">
             <div className="overflow-hidden rounded-[30px] border border-[#312619] bg-[linear-gradient(180deg,#1a140f_0%,#17120e_100%)] shadow-[0_24px_50px_rgba(0,0,0,0.16)]">
               <div className="flex items-center justify-between border-b border-[#2e2419] px-6 py-5">
                 <h2 className="text-[1.65rem] font-bold text-[#f4efe6]">Đơn hàng</h2>
