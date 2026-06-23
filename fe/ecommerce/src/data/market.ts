@@ -129,8 +129,117 @@ function createImageVariant(image: string, variant: 'main' | 'studio' | 'detail'
   return image
 }
 
+function createProductReviews(
+  input: Pick<Product, 'rating' | 'colors' | 'sizes'> & { id?: string },
+): Product['reviews'] {
+  const reviewPool = [
+    {
+      author: 'Vo Thanh Dat',
+      comment:
+        'Chat vai mem, len form gon va mac ca ngay van de chiu. Mau ngoai thuc te giong anh.',
+      verifiedPurchase: true,
+      helpfulCount: 42,
+      createdAt: '2025-04-20',
+      ratingOffset: 0,
+    },
+    {
+      author: 'Pham Ngoc Ha',
+      comment:
+        'Mac dep, duong may gon. Mau thuc te dam hon anh mot chut nen shop nen co them anh chup thuong.',
+      verifiedPurchase: false,
+      helpfulCount: 8,
+      createdAt: '2025-04-27',
+      ratingOffset: -1,
+    },
+    {
+      author: 'Le Hoang Phuc',
+      comment:
+        'Dong goi can than, nhan hang dung mo ta. Day la mon minh quay lai mua them mau thu hai.',
+      verifiedPurchase: true,
+      helpfulCount: 31,
+      createdAt: '2025-05-02',
+      ratingOffset: 1,
+    },
+    {
+      author: 'Nguyen Minh Khoa',
+      comment:
+        'Form can bang, khong qua bo cung khong qua rong. Di lam hay di choi deu mac duoc.',
+      verifiedPurchase: true,
+      helpfulCount: 16,
+      createdAt: '2025-05-09',
+      ratingOffset: 0,
+    },
+    {
+      author: 'Tran Yen Nhi',
+      comment:
+        'Minh thich phan hoan thien tong the. San pham nhin gon gang, cam len thay chin chu hon tam gia.',
+      verifiedPurchase: true,
+      helpfulCount: 12,
+      createdAt: '2025-05-14',
+      ratingOffset: 0,
+    },
+    {
+      author: 'Nguyen Gia Bao',
+      comment:
+        'Vai dep va dung chat lieu nhu mo ta. Size len vua nguoi, mac len nhin gon va de phoi.',
+      verifiedPurchase: true,
+      helpfulCount: 19,
+      createdAt: '2025-05-18',
+      ratingOffset: 1,
+    },
+    {
+      author: 'Hoang Tram',
+      comment:
+        'Mac on, nhung minh muon phan co ao dung form hon mot chut. Tong the van rat de mac.',
+      verifiedPurchase: true,
+      helpfulCount: 9,
+      createdAt: '2025-05-25',
+      ratingOffset: -1,
+    },
+    {
+      author: 'Pham Quoc Anh',
+      comment:
+        'Mau dep, dong goi ky. Form dung nhu ky vong va sau khi giat lan dau van giu dang tot.',
+      verifiedPurchase: true,
+      helpfulCount: 24,
+      createdAt: '2025-05-29',
+      ratingOffset: 1,
+    },
+    {
+      author: 'Le Thu Uyen',
+      comment:
+        'Mac tam on nhung minh thay tay ao hoi rong. Neu co them bang so do se de chon hon.',
+      verifiedPurchase: false,
+      helpfulCount: 6,
+      createdAt: '2025-06-02',
+      ratingOffset: -2,
+    },
+    {
+      author: 'Tran Duc Huy',
+      comment:
+        'Gia hop ly, chat vai kha va giao hang nhanh. Se quay lai mua them mau khac neu restock.',
+      verifiedPurchase: true,
+      helpfulCount: 14,
+      createdAt: '2025-06-08',
+      ratingOffset: 0,
+    },
+  ]
+
+  return reviewPool.map((review, index) => ({
+    id: `${input.id ?? 'product'}-review-${index + 1}`,
+    author: review.author,
+    rating: Math.max(1, Math.min(5, input.rating + review.ratingOffset)),
+    color: input.colors[index % input.colors.length]?.name ?? 'Mac dinh',
+    size: input.sizes[Math.min(index, input.sizes.length - 1)] ?? 'One size',
+    comment: review.comment,
+    createdAt: review.createdAt,
+    helpfulCount: review.helpfulCount,
+    verifiedPurchase: review.verifiedPurchase,
+  }))
+}
+
 export function createProductMockData(
-  input: Pick<Product, 'name' | 'image' | 'country' | 'category' | 'rating'>,
+  input: Pick<Product, 'name' | 'image' | 'country' | 'category' | 'rating'> & { id?: string },
 ) {
   const categoryKey = normalizeCategoryKey(input.category)
 
@@ -256,6 +365,12 @@ export function createProductMockData(
     colors: defaultColors,
     sizes,
     benefits,
+    reviews: createProductReviews({
+      id: input.id,
+      rating: input.rating,
+      colors: defaultColors,
+      sizes,
+    }),
     tags: [
       input.category,
       `Xuất xứ: ${input.country}`,
@@ -272,7 +387,7 @@ export function createProductMockData(
 function withProductMockData(
   product: Omit<
     Product,
-    'images' | 'colors' | 'sizes' | 'benefits' | 'tags' | 'sizeGuide'
+    'images' | 'colors' | 'sizes' | 'benefits' | 'reviews' | 'tags' | 'sizeGuide'
   >,
 ): Product {
   const originalPriceMap: Record<string, number> = {

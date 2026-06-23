@@ -4,13 +4,29 @@ import DashboardPage from '../pages/admin/DashboardPage';
 import CategoryPage from '../pages/admin/CategoryPage';
 import AdminProductPage from '../pages/admin/ProductPage';
 import SettingsPage from '../pages/admin/SettingsPage';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
+import LoginPage from '../pages/auth/LoginPage';
+import RegisterPage from '../pages/auth/RegisterPage';
 import CartPage from '../pages/user/CartPage';
+import CheckoutPage from '../pages/user/CheckoutPage';
 import ProductPage from '../pages/user/ProductPage';
 import ProductDetailPage from '../pages/user/ProductDetailPage';
 import SavedPage from '../pages/user/SavedPage';
 import { createBrowserRouter } from 'react-router-dom';
 
 const AppRouter = createBrowserRouter([
+    {
+        path: '/login',
+        element: <LoginPage />
+    },
+    {
+        path: '/register',
+        element: <RegisterPage />
+    },
+    {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />
+    },
     {
         path: '/',
         element: <UserLayout />,
@@ -26,6 +42,10 @@ const AppRouter = createBrowserRouter([
             {
                 path: 'cart',
                 element: <CartPage />
+            },
+            {
+                path: 'checkout',
+                element: <CheckoutPage />
             },
             {
                 path: 'saved',

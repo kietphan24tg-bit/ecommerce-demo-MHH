@@ -1,4 +1,4 @@
-import { ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, SlidersHorizontal, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CATEGORY_LABELS,
@@ -15,11 +15,13 @@ type ProductFiltersProps = {
   filters: ProductFiltersType
   countryOptions: CountryOption[]
   resultCount: number
+  mobileOpen?: boolean
   onChange: <K extends keyof ProductFiltersType>(
     key: K,
     value: ProductFiltersType[K],
   ) => void
   onReset: () => void
+  onMobileClose?: () => void
 }
 
 type FilterOption = {
@@ -250,8 +252,10 @@ export function ProductFilters({
   filters,
   countryOptions,
   resultCount,
+  mobileOpen = false,
   onChange,
   onReset,
+  onMobileClose,
 }: ProductFiltersProps) {
   const categoryOptions = CATEGORIES.map((category) => ({
     value: category,
@@ -267,7 +271,23 @@ export function ProductFilters({
   ]
 
   return (
-    <aside className="border-r border-[#241c11] bg-[#0b0806] lg:sticky lg:top-[69px] lg:h-[calc(100svh-69px)]">
+    <>
+      {mobileOpen ? (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={onMobileClose}
+        />
+      ) : null}
+
+      <aside
+        className={[
+          'border-r border-[#241c11] bg-[#0b0806]',
+          'fixed inset-y-0 left-0 z-50 w-[300px] overflow-y-auto transition-transform duration-300',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          'lg:relative lg:inset-y-auto lg:left-auto lg:z-auto lg:w-auto lg:translate-x-0 lg:overflow-visible',
+          'lg:sticky lg:top-[69px] lg:h-[calc(100svh-69px)]',
+        ].join(' ')}
+      >
       <div className="border-b border-[#241c11] px-5 py-5 xl:px-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-[#d3a03a]">
@@ -277,8 +297,18 @@ export function ProductFilters({
             </h2>
           </div>
 
-          <div className="rounded-full border border-[#4b3513] bg-[#1b1207] px-3 py-1 text-[0.9rem] font-semibold text-[#cf9d2b]">
-            {resultCount} kết quả
+          <div className="flex items-center gap-2">
+            <div className="rounded-full border border-[#4b3513] bg-[#1b1207] px-3 py-1 text-[0.9rem] font-semibold text-[#cf9d2b]">
+              {resultCount} kết quả
+            </div>
+            <button
+              type="button"
+              onClick={onMobileClose}
+              aria-label="Đóng bộ lọc"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-[#241c11] text-[#8d6930] transition hover:text-[#f4ead4] lg:hidden"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -362,5 +392,6 @@ export function ProductFilters({
         </Button>
       </div>
     </aside>
+    </>
   )
 }

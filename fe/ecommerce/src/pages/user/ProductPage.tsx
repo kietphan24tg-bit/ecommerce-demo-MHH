@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { ProductCard } from '../../components/user/ProductCard'
@@ -32,6 +32,7 @@ function ProductPage() {
   const countryOptions = useMarketStore((state) => state.countryOptions)
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [currentPage, setCurrentPage] = useState(1)
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -99,19 +100,30 @@ function ProductPage() {
           filters={filters}
           countryOptions={countryOptions}
           resultCount={filteredProducts.length}
+          mobileOpen={mobileFiltersOpen}
           onChange={setFilter}
           onReset={() => {
             setCurrentPage(1)
             setFilters(DEFAULT_FILTERS)
           }}
+          onMobileClose={() => setMobileFiltersOpen(false)}
         />
 
         <div className="min-w-0">
           <div className="sticky top-[69px] z-30 border-b border-[#221a10] bg-[#090705]/96 px-5 py-3.5 backdrop-blur-xl sm:px-6 lg:px-5 xl:px-6">
             <form
-              className="flex flex-col gap-3 xl:flex-row xl:items-center"
+              className="flex gap-2 xl:gap-3"
               onSubmit={(event) => event.preventDefault()}
             >
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(true)}
+                className="flex h-11 shrink-0 items-center gap-2 rounded-[12px] border border-[#5a5144] bg-[#16110d] px-4 text-[0.98rem] font-semibold text-[#f6f0e4] transition hover:border-[#8b6f38] lg:hidden"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Lọc</span>
+              </button>
+
               <Input
                 value={filters.description}
                 placeholder="Tìm áo, quần, giày, dép hoặc mô tả sản phẩm"
@@ -119,15 +131,13 @@ function ProductPage() {
                 className="h-11 flex-1 rounded-[10px] border-[#3a3125] bg-[#17120d] px-4 text-[0.98rem] font-medium text-[#ece3d1] placeholder:text-[#8e8476] focus:border-[#7f622b] focus:bg-[#1b1510]"
               />
 
-              <div className="flex flex-col sm:flex-row xl:flex-none">
-                <button
-                  type="submit"
-                  className="flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#5a5144] bg-transparent px-5 text-[0.98rem] font-semibold text-[#f6f0e4] transition hover:border-[#8b6f38] hover:bg-[#16110d]"
-                >
-                  <Search className="h-4.5 w-4.5" />
-                  Tìm kiếm
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[#5a5144] bg-transparent px-4 text-[0.98rem] font-semibold text-[#f6f0e4] transition hover:border-[#8b6f38] hover:bg-[#16110d] sm:px-5"
+              >
+                <Search className="h-4.5 w-4.5" />
+                <span className="hidden sm:inline">Tìm kiếm</span>
+              </button>
             </form>
           </div>
 

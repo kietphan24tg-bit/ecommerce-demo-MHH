@@ -1,0 +1,43 @@
+Database migrations (Alembic is the single source of truth for schema).
+
+## Local development
+
+From the `be/` directory:
+
+```bash
+# Apply all pending migrations
+alembic upgrade head
+
+# Or via Makefile
+make migrate
+
+# Migrate then start dev server
+make dev
+```
+
+## Create a new migration
+
+```bash
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+```
+
+## Container / production
+
+Migrations run before the app starts via `scripts/entrypoint.sh`:
+
+```bash
+alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 4000
+```
+
+Build and run:
+
+```bash
+docker build -t ecommerce-be .
+docker run --rm -p 4000:4000 --env-file .env ecommerce-be
+```
+
+## Health checks
+
+- `GET /health` — liveness (process is running)
+- `GET /ready` — readiness (database + redis are reachable)
